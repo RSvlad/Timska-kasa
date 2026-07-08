@@ -295,7 +295,13 @@ export function RecordList({ role, currentUserId }: Props) {
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/heic"
                   onChange={handleReceiptChange}
+                  className="file-input-hidden"
+                  id="receipt-file-input"
                 />
+                <label htmlFor="receipt-file-input" className="file-picker-btn">
+                  <span className="file-picker-icon">🧾</span>
+                  <span>{pendingReceipt ? "Промени слику" : "Изабери слику"}</span>
+                </label>
 
                 {pendingReceipt && (
                   <p className="receipt-pending">Одабрано: {pendingReceipt.name}</p>
