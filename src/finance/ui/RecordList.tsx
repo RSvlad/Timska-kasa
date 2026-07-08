@@ -1,6 +1,6 @@
 // UI: Листа финансијских записа са формом за унос/измену (само Admin).
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   createFinanceRecord,
   updateFinanceRecord,
@@ -8,6 +8,7 @@ import {
 import { useRecordList } from "@finance/application/useRecordList";
 import { useCategoryList } from "@finance/application/useCategoryList";
 import { useFundList } from "@finance/application/useFundList";
+import { useReceiptUpload } from "@finance/application/useReceiptUpload";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { RecordType } from "@finance/domain/Category";
 import type { Role } from "@identity/domain/User";
@@ -38,6 +39,10 @@ export function RecordList({ role, currentUserId }: Props) {
   const [editId,    setEditId]    = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [open,      setOpen]      = useState(false);
+
+  const [pendingReceipt, setPendingReceipt] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const receiptUpload = useReceiptUpload();
 
   const activeCategories   = categories.filter((c) => c.active);
   const filteredCategories = activeCategories.filter((c) => c.type === form.type);
@@ -92,11 +97,20 @@ export function RecordList({ role, currentUserId }: Props) {
         description:  payload.description,
         fundId:       payload.fundId,
       });
+      if (pendingReceipt) {
+        const existing = records.find((r) => r.id === editId);
+        await receiptUpload.attachReceipt(editId, pendingReceipt, existing?.receiptUrl);
+      }
       setEditId(null);
     } else {
-      await createFinanceRecord(payload);
+      const newId = await createFinanceRecord(payload);
+      if (pendingReceipt) {
+        await receiptUpload.attachReceipt(newId, pendingReceipt);
+      }
     }
     setForm(EMPTY_FORM);
+    setPendingReceipt(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setOpen(false);
   }
 
@@ -112,6 +126,8 @@ export function RecordList({ role, currentUserId }: Props) {
       description:  r.description ?? "",
       fundId:       r.fundId ?? "",
     });
+    setPendingReceipt(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setOpen(true);
   }
 
@@ -119,7 +135,19 @@ export function RecordList({ role, currentUserId }: Props) {
     setEditId(null);
     setForm(EMPTY_FORM);
     setFormError("");
+    setPendingReceipt(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setOpen(false);
+  }
+
+  function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    setPendingReceipt(file ?? null);
+  }
+
+  async function handleRemoveExistingReceipt() {
+    if (!editId) return;
+    await receiptUpload.removeReceipt(editId);
   }
 
   const sorted = [...records].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
@@ -239,6 +267,47 @@ export function RecordList({ role, currentUserId }: Props) {
                 />
               </div>
 
+              {/* Рачун — опциона слика */}
+              <div className="form-field">
+                <label className="field-label">Рачун <span className="field-optional">(опционо)</span></label>
+
+                {editId && !pendingReceipt && (() => {
+                  const existingUrl = records.find((r) => r.id === editId)?.receiptUrl;
+                  return existingUrl ? (
+                    <div className="receipt-preview">
+                      <a href={existingUrl} target="_blank" rel="noreferrer">
+                        <img src={existingUrl} alt="Рачун" className="receipt-thumb" />
+                      </a>
+                      <button
+                        type="button"
+                        className="ghost"
+                        disabled={receiptUpload.uploading}
+                        onClick={handleRemoveExistingReceipt}
+                      >
+                        Уклони рачун
+                      </button>
+                    </div>
+                  ) : null;
+                })()}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic"
+                  onChange={handleReceiptChange}
+                />
+
+                {pendingReceipt && (
+                  <p className="receipt-pending">Одабрано: {pendingReceipt.name}</p>
+                )}
+                {receiptUpload.uploading && (
+                  <p className="receipt-pending">Отпремање рачуна…</p>
+                )}
+                {receiptUpload.error && (
+                  <p className="error-text">{receiptUpload.error}</p>
+                )}
+              </div>
+
               {formError && <p className="error-text">{formError}</p>}
 
               <div className="form-actions">
@@ -273,6 +342,9 @@ export function RecordList({ role, currentUserId }: Props) {
                     <span className="recent-cat">
                       {categoryName(r.categoryId)}
                       {r.fundId && <> · <span style={{ color: "var(--accent)" }}>📁 {fundName(r.fundId)}</span></>}
+                      {r.receiptUrl && (
+                        <> · <a href={r.receiptUrl} target="_blank" rel="noreferrer">🧾 рачун</a></>
+                      )}
                       {r.description && <> · {r.description}</>}
                     </span>
                     <span className="recent-time">

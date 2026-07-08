@@ -1,0 +1,30 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAllowed() {
+      return isSignedIn()
+        && firestore.exists(/databases/(default)/documents/allowedUsers/$(request.auth.token.email));
+    }
+
+    function isAdmin() {
+      return isAllowed()
+        && firestore.get(/databases/(default)/documents/allowedUsers/$(request.auth.token.email)).data.role == "Admin";
+    }
+
+    // Путања: receipts/{recordId}/{filename} — видети ReceiptStorage.ts.
+    // Само Admin отпрема/брише; сви allowed корисници читају (исто као /transactions у firestore.rules).
+    match /receipts/{recordId}/{fileName} {
+      allow read: if isAllowed();
+      allow write: if isAdmin()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches("image/(jpeg|png|webp|heic)");
+      allow delete: if isAdmin();
+    }
+
+  }
+}

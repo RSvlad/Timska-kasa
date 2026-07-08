@@ -8,6 +8,7 @@ import {
   updateDoc,
   onSnapshot,
   Timestamp,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "@shared/infrastructure/firebase";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
@@ -77,6 +78,13 @@ export async function updateFinanceRecord(
   const data: Record<string, unknown> = { ...patch };
   if (patch.dateTime) {
     data.dateTime = Timestamp.fromDate(patch.dateTime);
+  }
+  // `undefined` Firestore игнорише (поље остаје нетакнуто) — за експлицитно
+  // брисање поља (нпр. уклањање receiptUrl) мора deleteField().
+  for (const key of Object.keys(data)) {
+    if (data[key] === undefined) {
+      data[key] = deleteField();
+    }
   }
   await updateDoc(ref, data);
 }
