@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/Finance-project/",
+  base: "/Timska-kasa/",
   resolve: {
     alias: {
       "@identity": path.resolve(__dirname, "src/identity"),
