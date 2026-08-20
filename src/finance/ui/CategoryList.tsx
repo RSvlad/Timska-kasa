@@ -6,6 +6,7 @@ import {
   updateCategory,
 } from "@finance/infrastructure/CategoryRepository";
 import { useCategoryList } from "@finance/application/useCategoryList";
+import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Category, RecordType } from "@finance/domain/Category";
 import type { Role } from "@identity/domain/User";
 
@@ -30,6 +31,8 @@ export function CategoryList({ role }: Props) {
   const [editId,   setEditId]   = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
+  const [pendingDeactivate, setPendingDeactivate] = useState<Category | null>(null);
+
   async function handleCreate() {
     const trimmed = newName.trim();
     if (!trimmed) { setFormError("Назив је обавезан."); return; }
@@ -39,8 +42,10 @@ export function CategoryList({ role }: Props) {
     setFormOpen(false);
   }
 
-  async function handleDeactivate(cat: Category) {
-    await updateCategory(cat.id, { active: false });
+  async function confirmDeactivate() {
+    if (!pendingDeactivate) return;
+    await updateCategory(pendingDeactivate.id, { active: false });
+    setPendingDeactivate(null);
   }
 
   async function handleEditSave(cat: Category) {
@@ -99,7 +104,7 @@ export function CategoryList({ role }: Props) {
                           <button
                             className="chip-action-btn danger"
                             title="Деактивирај"
-                            onClick={() => handleDeactivate(cat)}
+                            onClick={() => setPendingDeactivate(cat)}
                           >✕</button>
                         </div>
                       )}
@@ -152,6 +157,15 @@ export function CategoryList({ role }: Props) {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDeactivate !== null}
+        title={`Деактивирај „${pendingDeactivate?.name ?? ""}“?`}
+        message="Категорија више неће бити понуђена при уносу нових записа. Постојећи записи остају нетакнути — ово не брише историју."
+        confirmLabel="Деактивирај"
+        onConfirm={confirmDeactivate}
+        onCancel={() => setPendingDeactivate(null)}
+      />
 
     </div>
   );

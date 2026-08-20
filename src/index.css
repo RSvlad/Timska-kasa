@@ -251,6 +251,24 @@ button.ghost:hover:not(:disabled) {
   border-color: var(--border);
 }
 
+button.danger-solid {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 3px 14px rgba(224,122,95,0.30);
+}
+@media (hover: hover) {
+  button.danger-solid:hover:not(:disabled) {
+    background: #c9614a;
+    border-color: #c9614a;
+  }
+}
+button.danger-solid:active:not(:disabled) {
+  background: #c9614a;
+  border-color: #c9614a;
+}
+
 /* ── Inputs ───────────────────────────────────────────────────────────────── */
 
 input, select, textarea {
@@ -845,3 +863,39 @@ tbody tr:hover td { background: var(--bg-elevated); }
 .wallet-reserved-divider { width: 1px; background: var(--border); flex-shrink: 0; }
 .wallet-reserved-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 .wallet-reserved-val   { font-size: 0.9rem; font-weight: 600; }
+
+/* ── Confirm dialog ───────────────────────────────────────────────────────── */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 31, 24, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+  animation: fadeSlideIn 0.15s ease;
+}
+
+.confirm-dialog {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 22px 20px;
+  max-width: 360px;
+  width: 100%;
+}
+
+.confirm-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.confirm-message {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

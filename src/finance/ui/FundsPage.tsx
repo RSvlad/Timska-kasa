@@ -12,6 +12,7 @@ import {
   releaseFromFund,
   freeBalanceByCurrency,
 } from "@finance/application/useFundManager";
+import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
 import type { Role } from "@identity/domain/User";
 
@@ -62,6 +63,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     capacity: String(fund.capacity.value),
     currency: fund.capacity.currency,
   });
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const pct = fund.capacity.value > 0
     ? (fund.reserved / fund.capacity.value) * 100
@@ -104,8 +106,8 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     }
   }
 
-  async function handleDelete() {
-    if (!confirm(`Обриши фонд „${fund.name}"? Ова акција је трајна.`)) return;
+  async function confirmDelete() {
+    setConfirmingDelete(false);
     await removeFund(fund.id);
   }
 
@@ -147,7 +149,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
             {isAdmin && (
               <div className="fund-actions">
                 <button className="ghost chip-action-btn" onClick={() => { setEditing(true); setErr(""); }}>✎</button>
-                <button className="ghost chip-action-btn danger" onClick={handleDelete}>✕</button>
+                <button className="ghost chip-action-btn danger" onClick={() => setConfirmingDelete(true)}>✕</button>
               </div>
             )}
           </div>
@@ -215,6 +217,19 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title={`Обриши фонд „${fund.name}“?`}
+        message={
+          fund.reserved > 0
+            ? `Ова акција је трајна. Фонд тренутно има алоцирано ${fmt(fund.reserved, fund.capacity.currency)} — тај износ ће се вратити у слободна средства тимске касе.`
+            : "Ова акција је трајна."
+        }
+        confirmLabel="Обриши"
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmingDelete(false)}
+      />
     </div>
   );
 }
