@@ -10,14 +10,14 @@ type View = "dashboard" | "records" | "funds" | "categories";
 const NAV_ITEMS: { id: View; label: string; icon: string }[] = [
   { id: "dashboard",  label: "Стање",      icon: "◈" },
   { id: "records",    label: "Записи",     icon: "≡" },
-  { id: "funds",      label: "Средства",   icon: "🗂" },
+  { id: "funds",      label: "Фондови",    icon: "🗂" },
   { id: "categories", label: "Категорије", icon: "⊞" },
 ];
 
 const VIEW_TITLES: Record<View, string> = {
   dashboard:  "Стање",
   records:    "Записи",
-  funds:      "Средства",
+  funds:      "Фондови",
   categories: "Категорије",
 };
 
@@ -37,7 +37,7 @@ export default function App() {
     return (
       <div className="center-screen login-screen">
         <div className="login-logo">💰</div>
-        <h1 className="login-title">Финансије</h1>
+        <h1 className="login-title">Тимска каса</h1>
         <p className="login-sub">Пријавите се да бисте наставили</p>
         <button className="primary login-btn" onClick={signIn}>
           Пријави се преко Google налога

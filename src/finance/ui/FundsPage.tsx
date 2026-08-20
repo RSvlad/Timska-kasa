@@ -1,4 +1,4 @@
-// UI: Страница за управљање Средствима (CRUD + резервисање/ослобађање).
+// UI: Страница за управљање Фондовима (CRUD + алокација/дезалокација).
 // Само Admin може да мутира; Viewer само чита.
 
 import { useState } from "react";
@@ -105,7 +105,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
   }
 
   async function handleDelete() {
-    if (!confirm(`Обриши средство „${fund.name}"? Ова акција је трајна.`)) return;
+    if (!confirm(`Обриши фонд „${fund.name}"? Ова акција је трајна.`)) return;
     await removeFund(fund.id);
   }
 
@@ -154,7 +154,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
           <div className="fund-amounts">
             <div className="fund-amount-row">
-              <span className="fund-amount-label">Резервисано</span>
+              <span className="fund-amount-label">Алоцирано</span>
               <span className="fund-amount-val">{fmt(fund.reserved, fund.capacity.currency)}</span>
             </div>
             <div className="fund-amount-row">
@@ -162,7 +162,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
               <span className="fund-amount-val">{fmt(fund.capacity.value, fund.capacity.currency)}</span>
             </div>
             <div className="fund-amount-row">
-              <span className="fund-amount-label">Слободно у средству</span>
+              <span className="fund-amount-label">Слободно у фонду</span>
               <span className="fund-amount-val income-val">{fmt(available, fund.capacity.currency)}</span>
             </div>
           </div>
@@ -179,14 +179,14 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                     onClick={() => { setMode("reserve"); setErr(""); }}
                     disabled={freeInCurrency <= 0 || available <= 0}
                   >
-                    + Резервиши
+                    + Алоцирај
                   </button>
                   <button
                     className="ghost"
                     onClick={() => { setMode("release"); setErr(""); }}
                     disabled={fund.reserved <= 0}
                   >
-                    − Ослободи
+                    − Дезалоцирај
                   </button>
                 </div>
               ) : (
@@ -194,7 +194,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                   <div className="form-row">
                     <div className="form-field form-field--grow">
                       <label className="field-label">
-                        {mode === "reserve" ? `Резервиши (слободно у каси: ${freeInCurrency.toLocaleString("sr-RS")} ${fund.capacity.currency})` : "Ослободи"}
+                        {mode === "reserve" ? `Алоцирај (слободно у тимској каси: ${freeInCurrency.toLocaleString("sr-RS")} ${fund.capacity.currency})` : "Дезалоцирај"}
                       </label>
                       <input
                         inputMode="decimal"
@@ -263,7 +263,7 @@ export function FundsPage({ role }: Props) {
             className={`form-toggle ${open ? "open" : ""}`}
             onClick={() => { setOpen((v) => !v); if (open) { setForm(EMPTY_FORM); setFormError(""); } }}
           >
-            <span>{open ? "✕  Затвори" : "+ Ново средство"}</span>
+            <span>{open ? "✕  Затвори" : "+ Нови фонд"}</span>
           </button>
           {open && (
             <div>
@@ -304,18 +304,18 @@ export function FundsPage({ role }: Props) {
               </div>
               {formError && <p className="error-text">{formError}</p>}
               <div className="form-actions">
-                <button className="primary" onClick={handleCreate}>Креирај средство</button>
+                <button className="primary" onClick={handleCreate}>Креирај фонд</button>
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* ── Листа средстава ── */}
+      {/* ── Листа фондова ── */}
       {funds.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">🗂️</span>
-          <p>Нема средстава. {isAdmin ? "Додајте прво средство." : ""}</p>
+          <p>Нема фондова. {isAdmin ? "Додајте први фонд." : ""}</p>
         </div>
       ) : (
         <div className="funds-grid">

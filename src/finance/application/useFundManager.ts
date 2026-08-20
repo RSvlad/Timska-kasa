@@ -1,4 +1,4 @@
-// Application: операције над Средствима са провером инваријанти домена.
+// Application: операције над Фондовима са провером инваријанти домена.
 // Инваријанте (видети Fund.ts):
 //   1. reserved >= 0
 //   2. reserved <= capacity.value
@@ -14,7 +14,7 @@ import {
 import type { Fund } from "@finance/domain/Fund";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 
-// Слободна средства у каси по валути = салдо − Σ reserved средстава те валуте.
+// Слободна средства у тимској каси по валути = салдо − Σ reserved фондова те валуте.
 export function freeBalanceByCurrency(
   records: FinanceRecord[],
   funds: Fund[]
@@ -26,7 +26,7 @@ export function freeBalanceByCurrency(
     if (r.type === "Приход") balance[cur] += r.amount.value;
     else                     balance[cur] -= r.amount.value;
   }
-  // одузми резервисано из средстава
+  // одузми алоцирано из фондова
   for (const f of funds) {
     const cur = f.capacity.currency;
     if (!balance[cur]) balance[cur] = 0;
@@ -51,8 +51,8 @@ export async function removeFund(id: string): Promise<void> {
 }
 
 /**
- * Додаје `delta` у средство (резервисање).
- * Баца грешку ако би резервисано прешло капацитет или ако у каси нема довољно слободних средстава.
+ * Додаје `delta` у фонд (алокација).
+ * Баца грешку ако би алоцирано прешло капацитет или ако у каси нема довољно слободних средстава.
  */
 export async function reserveIntoFund(
   fund: Fund,
@@ -64,19 +64,19 @@ export async function reserveIntoFund(
   const newReserved = fund.reserved + delta;
   if (newReserved > fund.capacity.value)
     throw new Error(
-      `Прелази капацитет средства (макс. ${fund.capacity.value - fund.reserved} ${fund.capacity.currency}).`
+      `Прелази капацитет фонда (макс. ${fund.capacity.value - fund.reserved} ${fund.capacity.currency}).`
     );
   const free = freeBalanceByCurrency(records, allFunds);
   const freeCur = free[fund.capacity.currency] ?? 0;
   if (delta > freeCur)
     throw new Error(
-      `Нема довољно слободних средстава у каси (слободно: ${freeCur} ${fund.capacity.currency}).`
+      `Нема довољно слободних средстава у тимској каси (слободно: ${freeCur} ${fund.capacity.currency}).`
     );
   await updateFundReserved(fund.id, newReserved);
 }
 
 /**
- * Враћа `delta` из средства назад у слободну касу.
+ * Враћа `delta` из фонда назад у слободна средства тимске касе.
  * Баца грешку ако би reserved пао испод нуле.
  */
 export async function releaseFromFund(fund: Fund, delta: number): Promise<void> {
@@ -84,7 +84,7 @@ export async function releaseFromFund(fund: Fund, delta: number): Promise<void> 
   const newReserved = fund.reserved - delta;
   if (newReserved < 0)
     throw new Error(
-      `Не може се ослободити ${delta} — тренутно резервисано само ${fund.reserved} ${fund.capacity.currency}.`
+      `Не може се дезалоцирати ${delta} — тренутно алоцирано само ${fund.reserved} ${fund.capacity.currency}.`
     );
   await updateFundReserved(fund.id, newReserved);
 }

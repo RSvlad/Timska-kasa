@@ -72,7 +72,7 @@ function WalletCard({
   const balance  = income - expense;
   const positive = balance >= 0;
 
-  // резервисано у овој валути
+  // алоцирано у овој валути
   const totalReserved = funds
     .filter((f) => f.capacity.currency === currency)
     .reduce((sum, f) => sum + f.reserved, 0);
@@ -96,7 +96,7 @@ function WalletCard({
           </div>
           <div className="wallet-reserved-divider" />
           <div className="wallet-reserved-item">
-            <span className="wallet-reserved-label">Резервисано</span>
+            <span className="wallet-reserved-label">Алоцирано</span>
             <span className="wallet-reserved-val" style={{ color: "var(--accent)" }}>
               {fmt(totalReserved, currency)}
             </span>

@@ -1,4 +1,4 @@
-// Application: хук за real-time листу средстава.
+// Application: хук за real-time листу фондова.
 
 import { useEffect, useState } from "react";
 import { subscribeFunds } from "@finance/infrastructure/FundRepository";

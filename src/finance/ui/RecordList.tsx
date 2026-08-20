@@ -47,7 +47,7 @@ export function RecordList({ role, currentUserId }: Props) {
   const activeCategories   = categories.filter((c) => c.active);
   const filteredCategories = activeCategories.filter((c) => c.type === form.type);
 
-  // Средства која имају исту валуту као унети износ
+  // Фондови који имају исту валуту као унети износ
   const compatibleFunds = funds.filter(
     (f) => f.capacity.currency === form.currency.trim().toUpperCase()
   );
@@ -237,17 +237,17 @@ export function RecordList({ role, currentUserId }: Props) {
                 />
               </div>
 
-              {/* Ред 5: средство (опционо — само ако постоје компатибилна средства) */}
+              {/* Ред 5: фонд (опционо — само ако постоје компатибилни фондови) */}
               {compatibleFunds.length > 0 && (
                 <div className="form-field">
                   <label className="field-label">
-                    Средство <span className="field-optional">(опционо — терети средство уместо касе)</span>
+                    Фонд <span className="field-optional">(опционо — терети фонд уместо касе)</span>
                   </label>
                   <select
                     value={form.fundId}
                     onChange={(e) => setForm({ ...form, fundId: e.target.value })}
                   >
-                    <option value="">— Централна каса —</option>
+                    <option value="">— Тимска каса —</option>
                     {compatibleFunds.map((f) => (
                       <option key={f.id} value={f.id}>
                         {f.name} ({f.reserved.toLocaleString("sr-RS")} / {f.capacity.value.toLocaleString("sr-RS")} {f.capacity.currency})

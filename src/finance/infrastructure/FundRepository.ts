@@ -1,4 +1,4 @@
-// Infrastructure: Repository за Средство (Firestore колекција `funds`).
+// Infrastructure: Repository за Фонд (Firestore колекција `funds`).
 
 import {
   collection,

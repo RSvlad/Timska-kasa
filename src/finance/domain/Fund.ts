@@ -1,5 +1,5 @@
 // Bounded Context: Finance
-// Entity: Средство — именована резервација новца из Централне касе.
+// Entity: Фонд — именована алокација новца из Тимске касе.
 // Није Aggregate Root — живи унутар Finance bounded context-а.
 // Видети context/domain-model.md и ADR-017.
 
@@ -9,8 +9,8 @@ export interface Fund {
   readonly id: string;
   readonly name: string;
   readonly description?: string;
-  readonly capacity: Amount;   // максималан износ (value + currency)
-  readonly reserved: number;   // тренутно резервисано; 0 ≤ reserved ≤ capacity.value
+  readonly capacity: Amount;   // лимит фонда (value + currency)
+  readonly reserved: number;   // тренутно алоцирано; 0 ≤ reserved ≤ capacity.value
   readonly createdAt: Date;
 }
 
