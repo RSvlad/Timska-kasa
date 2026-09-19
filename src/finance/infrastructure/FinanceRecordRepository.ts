@@ -11,11 +11,12 @@ import {
   deleteField,
 } from "firebase/firestore";
 import { db } from "@shared/infrastructure/firebase";
+import { omitUndefined } from "@shared/infrastructure/omitUndefined";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 
 const COLLECTION = "transactions";
 
-type NewFinanceRecord = Omit<FinanceRecord, "id" | "createdAt">;
+export type NewFinanceRecord = Omit<FinanceRecord, "id" | "createdAt">;
 
 // `authorId` и `createdAt` се не мењају после креирања (audit trail).
 type FinanceRecordPatch = Partial<
@@ -53,7 +54,7 @@ export function subscribe(callback: (records: FinanceRecord[]) => void): () => v
 export async function createFinanceRecord(record: NewFinanceRecord): Promise<string> {
   const ref = collection(db, COLLECTION);
   const docRef = await addDoc(ref, {
-    ...record,
+    ...omitUndefined(record),
     dateTime: Timestamp.fromDate(record.dateTime),
     createdAt: Timestamp.now(),
   });

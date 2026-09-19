@@ -8,8 +8,10 @@ import {
   deleteDoc,
   onSnapshot,
   Timestamp,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "@shared/infrastructure/firebase";
+import { omitUndefined } from "@shared/infrastructure/omitUndefined";
 import type { Fund } from "@finance/domain/Fund";
 import type { Amount } from "@finance/domain/Amount";
 
@@ -42,7 +44,7 @@ export function subscribeFunds(callback: (funds: Fund[]) => void): () => void {
 export async function createFund(fund: NewFund): Promise<string> {
   const ref = collection(db, COLLECTION);
   const docRef = await addDoc(ref, {
-    ...fund,
+    ...omitUndefined(fund),
     reserved: 0,
     createdAt: Timestamp.now(),
   });
@@ -57,7 +59,12 @@ export async function updateFund(
   id: string,
   patch: Partial<Pick<Fund, "name" | "description" | "capacity">>
 ): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), patch);
+  const data: Record<string, unknown> = { ...patch };
+  // `undefined` је недозвољен у updateDoc; за брисање опционог поља треба deleteField().
+  for (const key of Object.keys(data)) {
+    if (data[key] === undefined) data[key] = deleteField();
+  }
+  await updateDoc(doc(db, COLLECTION, id), data);
 }
 
 export async function deleteFund(id: string): Promise<void> {

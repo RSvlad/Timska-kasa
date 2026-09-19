@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import {
   createFinanceRecord,
   updateFinanceRecord,
+  type NewFinanceRecord,
 } from "@finance/infrastructure/FinanceRecordRepository";
 import { useRecordList } from "@finance/application/useRecordList";
 import { useCategoryList } from "@finance/application/useCategoryList";
@@ -87,27 +88,33 @@ export function RecordList({ role, currentUserId }: Props) {
       fundId:       form.fundId || undefined,
     };
 
+    try {
+      await saveRecord(payload);
+    } catch {
+      setFormError("Запис није сачуван. Провери везу и покушај поново.");
+      return;
+    }
+    resetForm();
+  }
+
+  async function saveRecord(payload: NewFinanceRecord) {
     if (editId) {
-      await updateFinanceRecord(editId, {
-        type:         payload.type,
-        amount:       payload.amount,
-        dateTime:     payload.dateTime,
-        categoryId:   payload.categoryId,
-        counterparty: payload.counterparty,
-        description:  payload.description,
-        fundId:       payload.fundId,
-      });
+      const { authorId: _authorId, ...editable } = payload;
+      await updateFinanceRecord(editId, editable);
       if (pendingReceipt) {
         const existing = records.find((r) => r.id === editId);
         await receiptUpload.attachReceipt(editId, pendingReceipt, existing?.receiptUrl);
       }
       setEditId(null);
-    } else {
-      const newId = await createFinanceRecord(payload);
-      if (pendingReceipt) {
-        await receiptUpload.attachReceipt(newId, pendingReceipt);
-      }
+      return;
     }
+    const newId = await createFinanceRecord(payload);
+    if (pendingReceipt) {
+      await receiptUpload.attachReceipt(newId, pendingReceipt);
+    }
+  }
+
+  function resetForm() {
     setForm(EMPTY_FORM);
     setPendingReceipt(null);
     if (fileInputRef.current) fileInputRef.current.value = "";

@@ -108,7 +108,11 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
   async function confirmDelete() {
     setConfirmingDelete(false);
-    await removeFund(fund.id);
+    try {
+      await removeFund(fund.id);
+    } catch {
+      setErr("Фонд није обрисан. Провери везу и покушај поново.");
+    }
   }
 
   return (
@@ -171,6 +175,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
           <ProgressBar pct={pct} />
           <p className="fund-pct-label">{Math.round(pct)}% попуњено</p>
+          {mode === null && err && <p className="error-text">{err}</p>}
 
           {isAdmin && (
             <>
@@ -259,13 +264,17 @@ export function FundsPage({ role }: Props) {
     const err = validate();
     if (err) { setFormError(err); return; }
     setFormError("");
-    await addFund({
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      capacity: { value: Number(form.capacity), currency: form.currency.trim().toUpperCase() },
-    });
-    setForm(EMPTY_FORM);
-    setOpen(false);
+    try {
+      await addFund({
+        name: form.name.trim(),
+        description: form.description.trim() || undefined,
+        capacity: { value: Number(form.capacity), currency: form.currency.trim().toUpperCase() },
+      });
+      setForm(EMPTY_FORM);
+      setOpen(false);
+    } catch {
+      setFormError("Фонд није сачуван. Провери везу и покушај поново.");
+    }
   }
 
   return (
