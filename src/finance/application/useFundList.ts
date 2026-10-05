@@ -1,9 +1,9 @@
-// Application: хук за real-time листу фондова.
+// Application: хук за real-time листу фондова (дели се преко FinanceDataProvider-а).
 
-import { subscribeFunds } from "@finance/infrastructure/FundRepository";
 import type { Fund } from "@finance/domain/Fund";
-import { useSubscription, type Subscribed } from "./useSubscription";
+import type { Subscribed } from "./useSubscription";
+import { useFinanceData } from "./FinanceDataProvider";
 
 export function useFundList(): Subscribed<Fund> {
-  return useSubscription(subscribeFunds);
+  return useFinanceData().funds;
 }

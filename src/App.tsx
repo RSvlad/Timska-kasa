@@ -4,6 +4,7 @@ import { CategoryList } from "@finance/ui/CategoryList";
 import { RecordList } from "@finance/ui/RecordList";
 import { Dashboard } from "@finance/ui/Dashboard";
 import { FundsPage } from "@finance/ui/FundsPage";
+import { FinanceDataProvider } from "@finance/application/FinanceDataProvider";
 
 type View = "dashboard" | "records" | "funds" | "categories";
 
@@ -65,6 +66,7 @@ export default function App() {
   }
 
   return (
+    <FinanceDataProvider>
     <div className="app-shell">
 
       {/* ── Top bar ── */}
@@ -100,5 +102,6 @@ export default function App() {
       </nav>
 
     </div>
+    </FinanceDataProvider>
   );
 }
