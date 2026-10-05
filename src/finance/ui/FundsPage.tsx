@@ -14,6 +14,7 @@ import {
 } from "@finance/application/useFundManager";
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
+import { formatAmount, isValidCurrency, normalizeCurrency } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
 
 interface Props {
@@ -22,11 +23,7 @@ interface Props {
 
 const EMPTY_FORM = { name: "", description: "", capacity: "", currency: "RSD" };
 
-function fmt(value: number, currency: string): string {
-  return new Intl.NumberFormat("sr-RS", {
-    style: "currency", currency, maximumFractionDigits: 2,
-  }).format(value);
-}
+const fmt = formatAmount;
 
 function ProgressBar({ pct }: { pct: number }) {
   const clamped = Math.min(100, Math.max(0, pct));
@@ -92,13 +89,13 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     const cap = Number(editForm.capacity);
     if (!editForm.name.trim()) { setErr("Назив је обавезан."); return; }
     if (isNaN(cap) || cap <= 0) { setErr("Капацитет мора бити позитиван број."); return; }
-    if (!editForm.currency.trim()) { setErr("Валута је обавезна."); return; }
+    if (!isValidCurrency(editForm.currency)) { setErr("Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR)."); return; }
     setErr("");
     try {
       await editFund(fund.id, {
         name: editForm.name.trim(),
         description: editForm.description.trim() || undefined,
-        capacity: { value: cap, currency: editForm.currency.trim().toUpperCase() },
+        capacity: { value: cap, currency: normalizeCurrency(editForm.currency) },
       });
       setEditing(false);
     } catch (e: unknown) {
@@ -134,7 +131,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
             </div>
             <div className="form-field form-field--currency">
               <label className="field-label">Валута</label>
-              <input value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
+              <input maxLength={3} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
             </div>
           </div>
           {err && <p className="error-text">{err}</p>}
@@ -256,7 +253,7 @@ export function FundsPage({ role }: Props) {
     if (!form.name.trim())                                          return "Назив је обавезан.";
     if (!form.capacity || isNaN(Number(form.capacity)) || Number(form.capacity) <= 0)
                                                                     return "Капацитет мора бити позитиван број.";
-    if (!form.currency.trim())                                      return "Валута је обавезна.";
+    if (!isValidCurrency(form.currency))                            return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
     return "";
   }
 
@@ -268,7 +265,7 @@ export function FundsPage({ role }: Props) {
       await addFund({
         name: form.name.trim(),
         description: form.description.trim() || undefined,
-        capacity: { value: Number(form.capacity), currency: form.currency.trim().toUpperCase() },
+        capacity: { value: Number(form.capacity), currency: normalizeCurrency(form.currency) },
       });
       setForm(EMPTY_FORM);
       setOpen(false);
@@ -321,6 +318,7 @@ export function FundsPage({ role }: Props) {
                   <label className="field-label">Валута</label>
                   <input
                     placeholder="RSD"
+                    maxLength={3}
                     value={form.currency}
                     onChange={(e) => setForm({ ...form, currency: e.target.value })}
                   />

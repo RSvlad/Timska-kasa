@@ -12,6 +12,7 @@ import { useFundList } from "@finance/application/useFundList";
 import { useReceiptUpload } from "@finance/application/useReceiptUpload";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { RecordType } from "@finance/domain/Category";
+import { isValidCurrency, normalizeCurrency } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
 
 interface Props {
@@ -58,7 +59,7 @@ export function RecordList({ role, currentUserId }: Props) {
 
   // Фондови који имају исту валуту као унети износ
   const compatibleFunds = funds.filter(
-    (f) => f.capacity.currency === form.currency.trim().toUpperCase()
+    (f) => f.capacity.currency === normalizeCurrency(form.currency)
   );
 
   function categoryName(id: string): string {
@@ -74,7 +75,7 @@ export function RecordList({ role, currentUserId }: Props) {
   function validate(): string {
     if (!form.value || isNaN(Number(form.value)) || Number(form.value) <= 0)
       return "Износ мора бити позитиван број.";
-    if (!form.currency.trim())     return "Валута је обавезна.";
+    if (!isValidCurrency(form.currency)) return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
     if (!form.categoryId)          return "Категорија је обавезна.";
     if (!form.counterparty.trim()) return "Контрагент је обавезан.";
     return "";
@@ -87,7 +88,7 @@ export function RecordList({ role, currentUserId }: Props) {
 
     const payload = {
       type:         form.type,
-      amount:       { value: Number(form.value), currency: form.currency.trim().toUpperCase() },
+      amount:       { value: Number(form.value), currency: normalizeCurrency(form.currency) },
       dateTime:     new Date(form.dateTime),
       categoryId:   form.categoryId,
       counterparty: form.counterparty.trim(),
@@ -215,7 +216,7 @@ export function RecordList({ role, currentUserId }: Props) {
                   <label className="field-label">Валута</label>
                   <input
                     placeholder="RSD"
-                    maxLength={5}
+                    maxLength={3}
                     value={form.currency}
                     onChange={(e) => setForm({ ...form, currency: e.target.value, fundId: "" })}
                   />

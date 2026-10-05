@@ -8,6 +8,7 @@ import { freeBalanceByCurrency } from "@finance/application/useFundManager";
 import type { RecordType } from "@finance/domain/Category";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { Fund } from "@finance/domain/Fund";
+import { formatAmount } from "@finance/domain/Amount";
 
 type PeriodPreset = "данас" | "овај месец" | "ова година" | "све";
 
@@ -37,12 +38,7 @@ function periodBounds(preset: PeriodPreset): { from: Date; to: Date } | null {
   };
 }
 
-function fmt(value: number, currency: string): string {
-  return new Intl.NumberFormat("sr-RS", {
-    style: "currency", currency,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
+const fmt = formatAmount;
 
 function fmtCompact(value: number): string {
   if (Math.abs(value) >= 1_000_000) return (value / 1_000_000).toFixed(1) + "М";
