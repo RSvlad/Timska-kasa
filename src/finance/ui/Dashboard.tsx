@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { useRecordList } from "@finance/application/useRecordList";
 import { useCategoryList } from "@finance/application/useCategoryList";
 import { useFundList } from "@finance/application/useFundList";
-import { freeBalanceByCurrency } from "@finance/application/useFundManager";
 import type { RecordType } from "@finance/domain/Category";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { Fund } from "@finance/domain/Fund";
@@ -24,7 +23,7 @@ function periodBounds(preset: PeriodPreset): { from: Date; to: Date } | null {
   if (preset === "све") return null;
   if (preset === "данас") {
     const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return { from, to: new Date(from.getTime() + 86_400_000) };
+    return { from, to: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) };
   }
   if (preset === "овај месец") {
     return {
@@ -41,8 +40,10 @@ function periodBounds(preset: PeriodPreset): { from: Date; to: Date } | null {
 const fmt = formatAmount;
 
 function fmtCompact(value: number): string {
-  if (Math.abs(value) >= 1_000_000) return (value / 1_000_000).toFixed(1) + "М";
-  if (Math.abs(value) >= 1_000)     return (value / 1_000).toFixed(1) + "К";
+  const abs = Math.abs(value);
+  const opts = { maximumFractionDigits: 2 };
+  if (abs >= 1_000_000) return (value / 1_000_000).toLocaleString("sr-RS", opts) + "М";
+  if (abs >= 1_000)     return (value / 1_000).toLocaleString("sr-RS", opts) + "К";
   return value.toLocaleString("sr-RS");
 }
 
@@ -182,9 +183,6 @@ export function Dashboard() {
     () => [...filtered].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime()).slice(0, 10),
     [filtered]
   );
-
-  // Не користимо freeBalanceByCurrency директно овде — WalletCard рачуна сам
-  void freeBalanceByCurrency; // imported ради евентуалне будуће употребе
 
   function catName(id: string): string {
     return categories.find((c) => c.id === id)?.name ?? "—";
