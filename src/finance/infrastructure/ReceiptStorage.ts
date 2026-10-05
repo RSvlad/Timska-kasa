@@ -31,25 +31,36 @@ function assertValid(file: File): void {
 }
 
 /**
- * Отпрема слику рачуна за дати запис и враћа download URL.
- * Претходни рачун (ако постоји) треба експлицитно обрисати позивом
- * `deleteReceipt` пре овог позива — овде се не ради имплицитна замена
- * због могуће различите путање/екстензије.
+ * Отпрема слику рачуна за дати запис и враћа download URL и путању објекта.
+ * Валидација се ради пре отпремања. Претходне рачуне треба обрисати тек након
+ * успешног ажурирања записа, позивом `deleteReceipt(recordId, path)`.
  */
-export async function uploadReceipt(recordId: string, file: File): Promise<string> {
+export async function uploadReceipt(
+  recordId: string,
+  file: File
+): Promise<{ url: string; path: string }> {
   assertValid(file);
   const path = `receipts/${recordId}/${Date.now()}_${file.name}`;
   const storageRef = ref(storage, path);
   await uploadBytes(storageRef, file, { contentType: file.type });
-  return getDownloadURL(storageRef);
+  return { url: await getDownloadURL(storageRef), path };
+}
+
+/** Брише један објекат по путањи (повраћај након неуспелог ажурирања записа). */
+export async function deleteReceiptObject(path: string): Promise<void> {
+  await deleteObject(ref(storage, path));
 }
 
 /**
- * Брише све слике рачуна везане за дати запис (обично пре отпремања нове,
- * или при уклањању рачуна са трансакције).
+ * Брише слике рачуна везане за дати запис. Ако је задат `keepPath`,
+ * тај објекат се чува (нпр. управо отпремљена нова слика).
  */
-export async function deleteReceipt(recordId: string): Promise<void> {
+export async function deleteReceipt(recordId: string, keepPath?: string): Promise<void> {
   const folderRef = ref(storage, `receipts/${recordId}`);
   const { items } = await listAll(folderRef);
-  await Promise.all(items.map((item) => deleteObject(item)));
+  await Promise.all(
+    items
+      .filter((item) => item.fullPath !== keepPath)
+      .map((item) => deleteObject(item))
+  );
 }

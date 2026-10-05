@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   uploadReceipt,
   deleteReceipt,
+  deleteReceiptObject,
   ReceiptValidationError,
 } from "@finance/infrastructure/ReceiptStorage";
 import { updateFinanceRecord } from "@finance/infrastructure/FinanceRecordRepository";
@@ -24,11 +25,18 @@ export function useReceiptUpload(): UseReceiptUpload {
     setError("");
     setUploading(true);
     try {
-      if (previousUrl) {
-        await deleteReceipt(recordId);
+      // Редослед: валидација + upload нове → ажурирање записа → брисање старе.
+      // Грешка у било ком кораку никад не оставља запис без важеће слике.
+      const { url, path } = await uploadReceipt(recordId, file);
+      try {
+        await updateFinanceRecord(recordId, { receiptUrl: url });
+      } catch (e) {
+        await deleteReceiptObject(path).catch(() => {});
+        throw e;
       }
-      const url = await uploadReceipt(recordId, file);
-      await updateFinanceRecord(recordId, { receiptUrl: url });
+      if (previousUrl) {
+        await deleteReceipt(recordId, path).catch(() => {});
+      }
     } catch (e) {
       setError(
         e instanceof ReceiptValidationError
