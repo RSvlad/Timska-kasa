@@ -49,6 +49,7 @@ export function RecordList({ role, currentUserId }: Props) {
   const [editId,    setEditId]    = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [open,      setOpen]      = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [pendingReceipt, setPendingReceipt] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +83,7 @@ export function RecordList({ role, currentUserId }: Props) {
   }
 
   async function handleSubmit() {
+    if (submitting) return;
     const err = validate();
     if (err) { setFormError(err); return; }
     setFormError("");
@@ -97,33 +99,47 @@ export function RecordList({ role, currentUserId }: Props) {
       fundId:       form.fundId || undefined,
     };
 
+    setSubmitting(true);
     try {
-      await saveRecord(payload);
-    } catch {
-      setFormError("Запис није сачуван. Провери везу и покушај поново.");
-      return;
+      // 1) Чување записа.
+      let recordId: string;
+      try {
+        recordId = await saveRecord(payload);
+      } catch {
+        setFormError("Запис није сачуван. Провери везу и покушај поново.");
+        return;
+      }
+
+      // 2) Рачун (опционо). Запис је већ сачуван: при грешци прелазимо у режим
+      //    измене тог записа, па поновни покушај не прави дупликат.
+      if (pendingReceipt) {
+        const previousUrl = records.find((r) => r.id === recordId)?.receiptUrl;
+        try {
+          await receiptUpload.attachReceipt(recordId, pendingReceipt, previousUrl);
+        } catch {
+          setEditId(recordId);
+          setFormError("Запис је сачуван, али рачун није отпремљен. Покушај поново да сачуваш измене.");
+          return;
+        }
+      }
+      resetForm();
+    } finally {
+      setSubmitting(false);
     }
-    resetForm();
   }
 
-  async function saveRecord(payload: NewFinanceRecord) {
+  /** Креира или ажурира запис (без рачуна) и враћа његов ID. */
+  async function saveRecord(payload: NewFinanceRecord): Promise<string> {
     if (editId) {
       const { authorId: _authorId, ...editable } = payload;
       await updateFinanceRecord(editId, editable);
-      if (pendingReceipt) {
-        const existing = records.find((r) => r.id === editId);
-        await receiptUpload.attachReceipt(editId, pendingReceipt, existing?.receiptUrl);
-      }
-      setEditId(null);
-      return;
+      return editId;
     }
-    const newId = await createFinanceRecord(payload);
-    if (pendingReceipt) {
-      await receiptUpload.attachReceipt(newId, pendingReceipt);
-    }
+    return createFinanceRecord(payload);
   }
 
   function resetForm() {
+    setEditId(null);
     setForm(emptyForm());
     setPendingReceipt(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -342,11 +358,11 @@ export function RecordList({ role, currentUserId }: Props) {
               {formError && <p className="error-text">{formError}</p>}
 
               <div className="form-actions">
-                <button className="primary" onClick={handleSubmit}>
+                <button className="primary" disabled={submitting} onClick={handleSubmit}>
                   {editId ? "Сачувај измене" : "Додај запис"}
                 </button>
                 {editId && (
-                  <button className="ghost" onClick={cancelEdit}>Откажи</button>
+                  <button className="ghost" disabled={submitting} onClick={cancelEdit}>Откажи</button>
                 )}
               </div>
             </div>

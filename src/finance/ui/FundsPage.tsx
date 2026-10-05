@@ -61,6 +61,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     currency: fund.capacity.currency,
   });
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const pct = fund.capacity.value > 0
     ? (fund.reserved / fund.capacity.value) * 100
@@ -68,11 +69,13 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
   const available = fund.capacity.value - fund.reserved;
 
   async function handleTransfer() {
+    if (busy) return;
     const delta = Number(deltaInput);
     if (!deltaInput || isNaN(delta) || delta <= 0) {
       setErr("Унеси позитиван износ."); return;
     }
     setErr("");
+    setBusy(true);
     try {
       if (mode === "reserve") {
         await reserveIntoFund(fund, delta, records, allFunds);
@@ -82,15 +85,19 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       setDeltaInput(""); setMode(null);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Грешка.");
+    } finally {
+      setBusy(false);
     }
   }
 
   async function handleEdit() {
+    if (busy) return;
     const cap = Number(editForm.capacity);
     if (!editForm.name.trim()) { setErr("Назив је обавезан."); return; }
     if (isNaN(cap) || cap <= 0) { setErr("Капацитет мора бити позитиван број."); return; }
     if (!isValidCurrency(editForm.currency)) { setErr("Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR)."); return; }
     setErr("");
+    setBusy(true);
     try {
       await editFund(fund.id, {
         name: editForm.name.trim(),
@@ -100,15 +107,21 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       setEditing(false);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Грешка.");
+    } finally {
+      setBusy(false);
     }
   }
 
   async function confirmDelete() {
+    if (busy) return;
     setConfirmingDelete(false);
+    setBusy(true);
     try {
       await removeFund(fund.id);
     } catch {
       setErr("Фонд није обрисан. Провери везу и покушај поново.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -136,7 +149,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
           </div>
           {err && <p className="error-text">{err}</p>}
           <div className="form-actions">
-            <button className="primary" onClick={handleEdit}>Сачувај</button>
+            <button className="primary" disabled={busy} onClick={handleEdit}>Сачувај</button>
             <button className="ghost" onClick={() => { setEditing(false); setErr(""); }}>Откажи</button>
           </div>
         </div>
@@ -210,7 +223,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                   </div>
                   {err && <p className="error-text">{err}</p>}
                   <div className="form-actions">
-                    <button className="primary" onClick={handleTransfer}>Потврди</button>
+                    <button className="primary" disabled={busy} onClick={handleTransfer}>Потврди</button>
                     <button className="ghost" onClick={() => { setMode(null); setDeltaInput(""); setErr(""); }}>Откажи</button>
                   </div>
                 </div>
@@ -246,6 +259,7 @@ export function FundsPage({ role }: Props) {
   const [form,      setForm]      = useState(EMPTY_FORM);
   const [formError, setFormError] = useState("");
   const [open,      setOpen]      = useState(false);
+  const [creating,  setCreating]  = useState(false);
 
   const freeBalance = freeBalanceByCurrency(records, funds);
 
@@ -258,9 +272,11 @@ export function FundsPage({ role }: Props) {
   }
 
   async function handleCreate() {
+    if (creating) return;
     const err = validate();
     if (err) { setFormError(err); return; }
     setFormError("");
+    setCreating(true);
     try {
       await addFund({
         name: form.name.trim(),
@@ -271,6 +287,8 @@ export function FundsPage({ role }: Props) {
       setOpen(false);
     } catch {
       setFormError("Фонд није сачуван. Провери везу и покушај поново.");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -326,7 +344,7 @@ export function FundsPage({ role }: Props) {
               </div>
               {formError && <p className="error-text">{formError}</p>}
               <div className="form-actions">
-                <button className="primary" onClick={handleCreate}>Креирај фонд</button>
+                <button className="primary" disabled={creating} onClick={handleCreate}>Креирај фонд</button>
               </div>
             </div>
           )}
