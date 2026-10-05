@@ -40,6 +40,17 @@ export function isValidCurrency(input: string): boolean {
 
 export const MAX_AMOUNT = 1e12;
 
+// Аритметика у целобројним минорним јединицама (стотинке): избегава акумулацију
+// грешке плутајућег зареза. Сабирање/одузимање радити над toMinor(), а резултат
+// враћати кроз fromMinor(). Складиштење у Firestore-у остаје непромењено (број са ≤2 децимале).
+export function toMinor(value: number): number {
+  return Math.round(value * 100);
+}
+
+export function fromMinor(minor: number): number {
+  return minor / 100;
+}
+
 // Парсира унос износа: прихвата "10,5" и "10.5", највише 2 децимале, позитиван,
 // коначан и ≤ MAX_AMOUNT. Враћа null за све остало (Infinity, 1e21, hex, празно, ...).
 export function parseAmountInput(input: string): number | null {

@@ -13,25 +13,29 @@ import {
 } from "@finance/infrastructure/FundRepository";
 import type { Fund } from "@finance/domain/Fund";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
+import { toMinor, fromMinor } from "@finance/domain/Amount";
 
 // Слободна средства у тимској каси по валути = салдо − Σ reserved фондова те валуте.
 export function freeBalanceByCurrency(
   records: FinanceRecord[],
   funds: Fund[]
 ): Record<string, number> {
-  const balance: Record<string, number> = {};
+  // Акумулација у целобројним стотинкама (без грешке плутајућег зареза).
+  const minor: Record<string, number> = {};
   for (const r of records) {
     const cur = r.amount.currency;
-    if (!balance[cur]) balance[cur] = 0;
-    if (r.type === "Приход") balance[cur] += r.amount.value;
-    else                     balance[cur] -= r.amount.value;
+    if (!minor[cur]) minor[cur] = 0;
+    if (r.type === "Приход") minor[cur] += toMinor(r.amount.value);
+    else                     minor[cur] -= toMinor(r.amount.value);
   }
   // одузми алоцирано из фондова
   for (const f of funds) {
     const cur = f.capacity.currency;
-    if (!balance[cur]) balance[cur] = 0;
-    balance[cur] -= f.reserved;
+    if (!minor[cur]) minor[cur] = 0;
+    minor[cur] -= toMinor(f.reserved);
   }
+  const balance: Record<string, number> = {};
+  for (const cur of Object.keys(minor)) balance[cur] = fromMinor(minor[cur]);
   return balance;
 }
 
@@ -68,10 +72,10 @@ export async function reserveIntoFund(
   allFunds: Fund[]
 ): Promise<void> {
   if (delta <= 0) throw new Error("Износ мора бити позитиван.");
-  const newReserved = fund.reserved + delta;
+  const newReserved = fromMinor(toMinor(fund.reserved) + toMinor(delta));
   if (newReserved > fund.capacity.value)
     throw new Error(
-      `Прелази капацитет фонда (макс. ${fund.capacity.value - fund.reserved} ${fund.capacity.currency}).`
+      `Прелази капацитет фонда (макс. ${fromMinor(toMinor(fund.capacity.value) - toMinor(fund.reserved))} ${fund.capacity.currency}).`
     );
   const free = freeBalanceByCurrency(records, allFunds);
   const freeCur = free[fund.capacity.currency] ?? 0;
@@ -88,7 +92,7 @@ export async function reserveIntoFund(
  */
 export async function releaseFromFund(fund: Fund, delta: number): Promise<void> {
   if (delta <= 0) throw new Error("Износ мора бити позитиван.");
-  const newReserved = fund.reserved - delta;
+  const newReserved = fromMinor(toMinor(fund.reserved) - toMinor(delta));
   if (newReserved < 0)
     throw new Error(
       `Не може се дезалоцирати ${delta} — тренутно алоцирано само ${fund.reserved} ${fund.capacity.currency}.`

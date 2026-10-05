@@ -7,7 +7,7 @@ import { useFundList } from "@finance/application/useFundList";
 import type { RecordType } from "@finance/domain/Category";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { Fund } from "@finance/domain/Fund";
-import { formatAmount } from "@finance/domain/Amount";
+import { formatAmount, toMinor, fromMinor } from "@finance/domain/Amount";
 
 type PeriodPreset = "данас" | "овај месец" | "ова година" | "све";
 
@@ -47,14 +47,18 @@ function fmtCompact(value: number): string {
   return value.toLocaleString("sr-RS");
 }
 
-// Агрегација по валути из произвољног скупа записа
+// Агрегација по валути из произвољног скупа записа (у стотинкама, па назад у децимални износ)
 function aggregate(records: FinanceRecord[]): Record<string, { income: number; expense: number }> {
-  const map: Record<string, { income: number; expense: number }> = {};
+  const minor: Record<string, { income: number; expense: number }> = {};
   for (const r of records) {
     const cur = r.amount.currency;
-    if (!map[cur]) map[cur] = { income: 0, expense: 0 };
-    if (r.type === "Приход") map[cur].income += r.amount.value;
-    else                     map[cur].expense += r.amount.value;
+    if (!minor[cur]) minor[cur] = { income: 0, expense: 0 };
+    if (r.type === "Приход") minor[cur].income += toMinor(r.amount.value);
+    else                     minor[cur].expense += toMinor(r.amount.value);
+  }
+  const map: Record<string, { income: number; expense: number }> = {};
+  for (const cur of Object.keys(minor)) {
+    map[cur] = { income: fromMinor(minor[cur].income), expense: fromMinor(minor[cur].expense) };
   }
   return map;
 }
@@ -66,14 +70,16 @@ function WalletCard({
 }: {
   currency: string; income: number; expense: number; funds: Fund[];
 }) {
-  const balance  = income - expense;
+  const balance  = fromMinor(toMinor(income) - toMinor(expense));
   const positive = balance >= 0;
 
   // алоцирано у овој валути
-  const totalReserved = funds
-    .filter((f) => f.capacity.currency === currency)
-    .reduce((sum, f) => sum + f.reserved, 0);
-  const free = balance - totalReserved;
+  const totalReserved = fromMinor(
+    funds
+      .filter((f) => f.capacity.currency === currency)
+      .reduce((sum, f) => sum + toMinor(f.reserved), 0)
+  );
+  const free = fromMinor(toMinor(balance) - toMinor(totalReserved));
   const hasReservations = totalReserved > 0;
 
   return (

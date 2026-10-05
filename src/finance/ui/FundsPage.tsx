@@ -15,7 +15,7 @@ import {
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
-import { formatAmount, isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
+import { formatAmount, isValidCurrency, normalizeCurrency, parseAmountInput, toMinor, fromMinor } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
 
 interface Props {
@@ -68,7 +68,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
   const pct = fund.capacity.value > 0
     ? (fund.reserved / fund.capacity.value) * 100
     : 0;
-  const available = fund.capacity.value - fund.reserved;
+  const available = fromMinor(toMinor(fund.capacity.value) - toMinor(fund.reserved));
 
   async function handleTransfer() {
     if (busy) return;
