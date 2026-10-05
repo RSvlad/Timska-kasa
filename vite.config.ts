@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [react()],
   base: "/Timska-kasa/",
   test: {
-    exclude: ["**/node_modules/**", "dist/**", "rules-tests/**"],
+    exclude: ["**/node_modules/**", "dist/**", "rules-tests/**", "e2e/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
