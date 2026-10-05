@@ -19,16 +19,24 @@ interface Props {
   currentUserId: string;
 }
 
-const EMPTY_FORM = {
-  type: "Приход" as RecordType,
-  value: "",
-  currency: "RSD",
-  dateTime: new Date().toISOString().slice(0, 16),
-  categoryId: "",
-  counterparty: "",
-  description: "",
-  fundId: "",
-};
+// Форматира Date у локално "YYYY-MM-DDTHH:mm" (формат за datetime-local).
+function toLocalInput(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function emptyForm() {
+  return {
+    type: "Приход" as RecordType,
+    value: "",
+    currency: "RSD",
+    dateTime: toLocalInput(new Date()),
+    categoryId: "",
+    counterparty: "",
+    description: "",
+    fundId: "",
+  };
+}
 
 export function RecordList({ role, currentUserId }: Props) {
   const records    = useRecordList();
@@ -36,7 +44,7 @@ export function RecordList({ role, currentUserId }: Props) {
   const funds      = useFundList();
   const isAdmin    = role === "Admin";
 
-  const [form,      setForm]      = useState(EMPTY_FORM);
+  const [form,      setForm]      = useState(emptyForm);
   const [editId,    setEditId]    = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [open,      setOpen]      = useState(false);
@@ -115,7 +123,7 @@ export function RecordList({ role, currentUserId }: Props) {
   }
 
   function resetForm() {
-    setForm(EMPTY_FORM);
+    setForm(emptyForm());
     setPendingReceipt(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setOpen(false);
@@ -127,7 +135,7 @@ export function RecordList({ role, currentUserId }: Props) {
       type:         r.type,
       value:        String(r.amount.value),
       currency:     r.amount.currency,
-      dateTime:     r.dateTime.toISOString().slice(0, 16),
+      dateTime:     toLocalInput(r.dateTime),
       categoryId:   r.categoryId,
       counterparty: r.counterparty,
       description:  r.description ?? "",
@@ -140,7 +148,7 @@ export function RecordList({ role, currentUserId }: Props) {
 
   function cancelEdit() {
     setEditId(null);
-    setForm(EMPTY_FORM);
+    setForm(emptyForm());
     setFormError("");
     setPendingReceipt(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -167,7 +175,11 @@ export function RecordList({ role, currentUserId }: Props) {
         <div className="card">
           <button
             className={`form-toggle ${open ? "open" : ""}`}
-            onClick={() => { setOpen((v) => !v); if (open) cancelEdit(); }}
+            onClick={() => {
+              if (open) { cancelEdit(); return; }
+              setForm(emptyForm());
+              setOpen(true);
+            }}
           >
             <span>{open ? "✕  Затвори" : "+ Нови запис"}</span>
           </button>
