@@ -9,6 +9,13 @@ export default defineConfig({
   base: "/Timska-kasa/",
   test: {
     exclude: ["**/node_modules/**", "dist/**", "rules-tests/**"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      include: ["src/finance/domain/**", "src/finance/application/**"],
+      exclude: ["**/*.test.ts", "**/*.tsx", "src/finance/application/use*.ts"],
+      thresholds: { lines: 50, functions: 50, statements: 50, branches: 50 },
+    },
   },
   resolve: {
     alias: {
