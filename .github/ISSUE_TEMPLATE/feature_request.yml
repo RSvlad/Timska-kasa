@@ -1,0 +1,27 @@
+name: ✨ Предлог функције
+description: Идеја за побољшање
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Који проблем решава?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Предложено решење
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Размотрене алтернативе
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Усклађеност са ПТСД принципима
+      options:
+        - label: Не нарушава транспарентност (нема трајног брисања података)
+        - label: Не захтева бекенд сервер
