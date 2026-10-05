@@ -209,7 +209,7 @@ export function RecordList({ role, currentUserId }: Props) {
                     inputMode="decimal"
                     placeholder="0.00"
                     value={form.value}
-                    onChange={(e) => setForm({ ...form, value: e.target.value, fundId: "" })}
+                    onChange={(e) => setForm({ ...form, value: e.target.value })}
                   />
                 </div>
                 <div className="form-field form-field--currency">
@@ -218,7 +218,12 @@ export function RecordList({ role, currentUserId }: Props) {
                     placeholder="RSD"
                     maxLength={3}
                     value={form.currency}
-                    onChange={(e) => setForm({ ...form, currency: e.target.value, fundId: "" })}
+                    onChange={(e) => {
+                      const currency = e.target.value;
+                      const fund = funds.find((f) => f.id === form.fundId);
+                      const keepFund = fund && fund.capacity.currency === normalizeCurrency(currency);
+                      setForm({ ...form, currency, fundId: keepFund ? form.fundId : "" });
+                    }}
                   />
                 </div>
               </div>
