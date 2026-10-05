@@ -6,7 +6,7 @@
 
 import {
   createFund,
-  updateFundReserved,
+  adjustFundReserved,
   updateFund,
   deleteFund,
   type NewFund,
@@ -72,7 +72,7 @@ export async function reserveIntoFund(
     throw new Error(
       `Нема довољно слободних средстава у тимској каси (слободно: ${freeCur} ${fund.capacity.currency}).`
     );
-  await updateFundReserved(fund.id, newReserved);
+  await adjustFundReserved(fund.id, delta);
 }
 
 /**
@@ -86,5 +86,5 @@ export async function releaseFromFund(fund: Fund, delta: number): Promise<void> 
     throw new Error(
       `Не може се дезалоцирати ${delta} — тренутно алоцирано само ${fund.reserved} ${fund.capacity.currency}.`
     );
-  await updateFundReserved(fund.id, newReserved);
+  await adjustFundReserved(fund.id, -delta);
 }

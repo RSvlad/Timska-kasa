@@ -9,6 +9,7 @@ import {
   onSnapshot,
   Timestamp,
   deleteField,
+  runTransaction,
 } from "firebase/firestore";
 import { db } from "@shared/infrastructure/firebase";
 import { omitUndefined } from "@shared/infrastructure/omitUndefined";
@@ -65,8 +66,26 @@ export async function createFund(fund: NewFund): Promise<string> {
   return docRef.id;
 }
 
-export async function updateFundReserved(id: string, reserved: number): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), { reserved });
+// Атомарно мења `reserved` за `delta` (транзакција над свежим стањем документа),
+// па истовремене измене или двоклик не дају изгубљена ажурирања.
+// Инваријанте 0 ≤ reserved ≤ capacity.value проверавају се над свежим подацима.
+export async function adjustFundReserved(id: string, delta: number): Promise<void> {
+  const ref = doc(db, COLLECTION, id);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("Фонд не постоји.");
+    const data = snap.data() as Pick<FundDoc, "reserved" | "capacity">;
+    const next = data.reserved + delta;
+    if (next < 0)
+      throw new Error(
+        `Не може се дезалоцирати ${-delta} — тренутно алоцирано само ${data.reserved} ${data.capacity.currency}.`
+      );
+    if (next > data.capacity.value)
+      throw new Error(
+        `Прелази капацитет фонда (макс. ${data.capacity.value - data.reserved} ${data.capacity.currency}).`
+      );
+    tx.update(ref, { reserved: next });
+  });
 }
 
 export async function updateFund(
