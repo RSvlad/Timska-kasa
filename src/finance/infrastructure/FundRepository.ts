@@ -4,8 +4,6 @@ import {
   collection,
   doc,
   addDoc,
-  updateDoc,
-  deleteDoc,
   onSnapshot,
   Timestamp,
   deleteField,
@@ -97,9 +95,38 @@ export async function updateFund(
   for (const key of Object.keys(data)) {
     if (data[key] === undefined) data[key] = deleteField();
   }
-  await updateDoc(doc(db, COLLECTION, id), data);
+  const ref = doc(db, COLLECTION, id);
+  // Транзакција: инваријанте се проверавају над свежим стањем документа.
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("Фонд не постоји.");
+    const cur = snap.data() as Pick<FundDoc, "reserved" | "capacity">;
+    if (patch.capacity) {
+      if (patch.capacity.currency !== cur.capacity.currency && cur.reserved > 0)
+        throw new Error(
+          `Валута се не може мењати док је у фонду алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај.`
+        );
+      if (patch.capacity.value < cur.reserved)
+        throw new Error(
+          `Капацитет не може бити мањи од алоцираног износа (${cur.reserved} ${cur.capacity.currency}).`
+        );
+    }
+    tx.update(ref, data);
+  });
 }
 
+// Брише фонд само ако у њему нема алоцираног новца (транзакција над свежим стањем).
+// Провера да ли записи референцирају фонд је на application слоју (removeFund).
 export async function deleteFund(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTION, id));
+  const ref = doc(db, COLLECTION, id);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const cur = snap.data() as Pick<FundDoc, "reserved" | "capacity">;
+    if (cur.reserved > 0)
+      throw new Error(
+        `Фонд има алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај средства.`
+      );
+    tx.delete(ref);
+  });
 }

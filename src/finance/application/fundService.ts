@@ -46,8 +46,15 @@ export async function editFund(
   return updateFund(id, patch);
 }
 
-export async function removeFund(id: string): Promise<void> {
-  return deleteFund(id);
+// Брисање је забрањено док фонд има алоцирано (проверава репозиторијум у транзакцији)
+// или док га референцирају записи (да не заостану сирочад `fundId`).
+export async function removeFund(fund: Fund, records: FinanceRecord[]): Promise<void> {
+  const refs = records.filter((r) => r.fundId === fund.id).length;
+  if (refs > 0)
+    throw new Error(
+      `Фонд се не може обрисати: референцира га ${refs} запис(а). Прво уклони везу у записима.`
+    );
+  return deleteFund(fund.id);
 }
 
 /**

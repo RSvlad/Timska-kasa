@@ -118,9 +118,9 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     setConfirmingDelete(false);
     setBusy(true);
     try {
-      await removeFund(fund.id);
-    } catch {
-      setErr("Фонд није обрисан. Провери везу и покушај поново.");
+      await removeFund(fund, records);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Фонд није обрисан. Провери везу и покушај поново.");
     } finally {
       setBusy(false);
     }
@@ -237,11 +237,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       <ConfirmDialog
         open={confirmingDelete}
         title={`Обриши фонд „${fund.name}“?`}
-        message={
-          fund.reserved > 0
-            ? `Ова акција је трајна. Фонд тренутно има алоцирано ${fmt(fund.reserved, fund.capacity.currency)} — тај износ ће се вратити у слободна средства тимске касе.`
-            : "Ова акција је трајна."
-        }
+        message="Ова акција је трајна."
         confirmLabel="Обриши"
         onConfirm={confirmDelete}
         onCancel={() => setConfirmingDelete(false)}
