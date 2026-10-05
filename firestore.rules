@@ -36,7 +36,7 @@ service cloud.firestore {
     function validRecord(d) {
       return d.keys().hasOnly([
           'type', 'amount', 'dateTime', 'categoryId', 'counterparty',
-          'description', 'authorId', 'createdAt', 'fundId', 'receiptUrl'
+          'description', 'authorId', 'createdAt', 'fundId', 'receiptUrl', 'receiptPath'
         ])
         && d.keys().hasAll([
           'type', 'amount', 'dateTime', 'categoryId', 'counterparty',
@@ -51,7 +51,8 @@ service cloud.firestore {
         && d.authorId is string
         && (!('description' in d) || d.description is string)
         && (!('fundId' in d) || (d.fundId is string && d.type == "Расход"))
-        && (!('receiptUrl' in d) || d.receiptUrl is string);
+        && (!('receiptUrl' in d) || d.receiptUrl is string)
+        && (!('receiptPath' in d) || (d.receiptPath is string && d.receiptPath.matches('^receipts/.+')));
     }
 
     function validFund(d) {

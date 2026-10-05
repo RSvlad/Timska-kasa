@@ -13,7 +13,7 @@ import { updateFinanceRecord } from "@finance/infrastructure/FinanceRecordReposi
 interface UseReceiptUpload {
   uploading: boolean;
   error: string;
-  attachReceipt: (recordId: string, file: File, previousUrl?: string) => Promise<void>;
+  attachReceipt: (recordId: string, file: File, hadPrevious?: boolean) => Promise<void>;
   removeReceipt: (recordId: string) => Promise<void>;
 }
 
@@ -21,20 +21,21 @@ export function useReceiptUpload(): UseReceiptUpload {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
-  async function attachReceipt(recordId: string, file: File, previousUrl?: string) {
+  async function attachReceipt(recordId: string, file: File, hadPrevious = false) {
     setError("");
     setUploading(true);
     try {
       // Редослед: валидација + upload нове → ажурирање записа → брисање старе.
       // Грешка у било ком кораку никад не оставља запис без важеће слике.
-      const { url, path } = await uploadReceipt(recordId, file);
+      // Чува се само путања; стари `receiptUrl` (ако постоји) се уклања.
+      const path = await uploadReceipt(recordId, file);
       try {
-        await updateFinanceRecord(recordId, { receiptUrl: url });
+        await updateFinanceRecord(recordId, { receiptPath: path, receiptUrl: undefined });
       } catch (e) {
         await deleteReceiptObject(path).catch(() => {});
         throw e;
       }
-      if (previousUrl) {
+      if (hadPrevious) {
         await deleteReceipt(recordId, path).catch(() => {});
       }
     } catch (e) {
@@ -54,7 +55,7 @@ export function useReceiptUpload(): UseReceiptUpload {
     setUploading(true);
     try {
       await deleteReceipt(recordId);
-      await updateFinanceRecord(recordId, { receiptUrl: undefined });
+      await updateFinanceRecord(recordId, { receiptPath: undefined, receiptUrl: undefined });
     } catch {
       setError("Рачун није уклоњен. Покушајте поново.");
     } finally {

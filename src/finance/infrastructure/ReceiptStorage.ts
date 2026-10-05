@@ -19,8 +19,26 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
 
 export class ReceiptValidationError extends Error {}
 
+const EXTENSION_TYPES: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  heic: "image/heic",
+  heif: "image/heic", // storage.rules прихвата само image/heic
+};
+
+/** `File.type` је за HEIC на неким прегледачима/ОС празан (или image/heif): тип се изводи из екстензије. */
+function resolveContentType(file: File): string {
+  if (ALLOWED_TYPES.includes(file.type)) return file.type;
+  if (file.type === "image/heif") return "image/heic";
+  if (file.type) return file.type; // непознат тип → одбија assertValid
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return EXTENSION_TYPES[ext] ?? "";
+}
+
 function assertValid(file: File): void {
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  if (!ALLOWED_TYPES.includes(resolveContentType(file))) {
     throw new ReceiptValidationError(
       "Дозвољени формати: JPEG, PNG, WEBP, HEIC."
     );
@@ -42,19 +60,24 @@ function sanitizeFileName(name: string): string {
 }
 
 /**
- * Отпрема слику рачуна за дати запис и враћа download URL и путању објекта.
+ * Отпрема слику рачуна за дати запис и враћа путању објекта (чува се у запису;
+ * download URL се не чува, већ се добија на захтев преко `resolveReceiptUrl`).
  * Валидација се ради пре отпремања. Претходне рачуне треба обрисати тек након
  * успешног ажурирања записа, позивом `deleteReceipt(recordId, path)`.
  */
-export async function uploadReceipt(
-  recordId: string,
-  file: File
-): Promise<{ url: string; path: string }> {
+export async function uploadReceipt(recordId: string, file: File): Promise<string> {
   assertValid(file);
   const path = `receipts/${recordId}/${Date.now()}_${sanitizeFileName(file.name)}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file, { contentType: file.type });
-  return { url: await getDownloadURL(storageRef), path };
+  await uploadBytes(ref(storage, path), file, { contentType: resolveContentType(file) });
+  return path;
+}
+
+/**
+ * Добија download URL на захтев (захтева read дозволу из storage.rules).
+ * Прихвата путању објекта или стари трајни download URL (`ref()` разуме оба).
+ */
+export function resolveReceiptUrl(pathOrLegacyUrl: string): Promise<string> {
+  return getDownloadURL(ref(storage, pathOrLegacyUrl));
 }
 
 /** Брише један објекат по путањи (повраћај након неуспелог ажурирања записа). */

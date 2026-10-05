@@ -15,5 +15,7 @@ export interface FinanceRecord {
   readonly authorId: string; // Firebase UID Администратора
   readonly createdAt: Date; // audit trail, аутоматски при креирању
   readonly fundId?: string; // опционо — ако је постављено, трансакција терети Фонд уместо слободне касе
-  readonly receiptUrl?: string; // опционо — download URL слике рачуна у Firebase Storage (видети ADR за путању receipts/{recordId})
+  readonly receiptPath?: string; // опционо — путања слике рачуна у Firebase Storage (receipts/{recordId}/...); URL се добија на захтев
+  /** @deprecated Стари записи: трајни tokenized download URL. Нови записи користе `receiptPath`. */
+  readonly receiptUrl?: string;
 }

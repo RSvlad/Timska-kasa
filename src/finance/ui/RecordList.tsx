@@ -11,6 +11,7 @@ import { useRecordList } from "@finance/application/useRecordList";
 import { useCategoryList } from "@finance/application/useCategoryList";
 import { useFundList } from "@finance/application/useFundList";
 import { useReceiptUpload } from "@finance/application/useReceiptUpload";
+import { openReceipt, receiptSource, useReceiptUrl } from "@finance/application/receiptAccess";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { RecordType } from "@finance/domain/Category";
 import { isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
@@ -19,6 +20,16 @@ import type { Role } from "@identity/domain/User";
 interface Props {
   role: Role;
   currentUserId: string;
+}
+
+/** Умањена слика рачуна (URL се добија на захтев). HEIC већина прегледача не приказује: уместо покварене слике остаје текст (линк је око њега). */
+function ReceiptThumb({ source }: { source: string }) {
+  const url = useReceiptUrl(source);
+  const [failed, setFailed] = useState(false);
+  if (failed || !url) return <span>🧾 Отвори рачун</span>;
+  return (
+    <img src={url} alt="Рачун" className="receipt-thumb" onError={() => setFailed(true)} />
+  );
 }
 
 // Форматира Date у локално "YYYY-MM-DDTHH:mm" (формат за datetime-local).
@@ -52,6 +63,7 @@ export function RecordList({ role, currentUserId }: Props) {
   const [formError, setFormError] = useState("");
   const [open,      setOpen]      = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [receiptError, setReceiptError] = useState("");
 
   const [pendingReceipt, setPendingReceipt] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,9 +131,10 @@ export function RecordList({ role, currentUserId }: Props) {
       // 2) Рачун (опционо). Запис је већ сачуван: при грешци прелазимо у режим
       //    измене тог записа, па поновни покушај не прави дупликат.
       if (pendingReceipt) {
-        const previousUrl = records.find((r) => r.id === recordId)?.receiptUrl;
+        const existing = records.find((r) => r.id === recordId);
+        const hadPrevious = !!existing && !!receiptSource(existing);
         try {
-          await receiptUpload.attachReceipt(recordId, pendingReceipt, previousUrl);
+          await receiptUpload.attachReceipt(recordId, pendingReceipt, hadPrevious);
         } catch {
           setEditId(recordId);
           setFormError("Запис је сачуван, али рачун није отпремљен. Покушај поново да сачуваш измене.");
@@ -186,6 +199,12 @@ export function RecordList({ role, currentUserId }: Props) {
   async function handleRemoveExistingReceipt() {
     if (!editId) return;
     await receiptUpload.removeReceipt(editId);
+  }
+
+  function handleOpenReceipt(e: React.MouseEvent, source: string) {
+    e.preventDefault();
+    setReceiptError("");
+    openReceipt(source).catch((err: Error) => setReceiptError(err.message));
   }
 
   const sorted = [...records].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
@@ -319,11 +338,12 @@ export function RecordList({ role, currentUserId }: Props) {
                 <label className="field-label">Рачун <span className="field-optional">(опционо)</span></label>
 
                 {editId && !pendingReceipt && (() => {
-                  const existingUrl = records.find((r) => r.id === editId)?.receiptUrl;
-                  return existingUrl ? (
+                  const existing = records.find((r) => r.id === editId);
+                  const existingSource = existing ? receiptSource(existing) : undefined;
+                  return existingSource ? (
                     <div className="receipt-preview">
-                      <a href={existingUrl} target="_blank" rel="noreferrer">
-                        <img src={existingUrl} alt="Рачун" className="receipt-thumb" />
+                      <a href="#" onClick={(e) => handleOpenReceipt(e, existingSource)}>
+                        <ReceiptThumb source={existingSource} />
                       </a>
                       <button
                         type="button"
@@ -340,7 +360,7 @@ export function RecordList({ role, currentUserId }: Props) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                   onChange={handleReceiptChange}
                   className="file-input-hidden"
                   id="receipt-file-input"
@@ -379,6 +399,7 @@ export function RecordList({ role, currentUserId }: Props) {
       {/* ── Листа записа ── */}
       <div className="card">
         <p className="section-title">Сви записи</p>
+        {receiptError && <p className="error-text">{receiptError}</p>}
         {sorted.length === 0 ? (
           <p className="empty-inline">Нема записа.</p>
         ) : (
@@ -395,8 +416,8 @@ export function RecordList({ role, currentUserId }: Props) {
                     <span className="recent-cat">
                       {categoryName(r.categoryId)}
                       {r.fundId && <> · <span style={{ color: "var(--accent)" }}>📁 {fundName(r.fundId)}</span></>}
-                      {r.receiptUrl && (
-                        <> · <a href={r.receiptUrl} target="_blank" rel="noreferrer">🧾 рачун</a></>
+                      {receiptSource(r) && (
+                        <> · <a href="#" onClick={(e) => handleOpenReceipt(e, receiptSource(r)!)}>🧾 рачун</a></>
                       )}
                       {r.description && <> · {r.description}</>}
                     </span>
