@@ -2,7 +2,21 @@
   "name": "timska-kasa",
   "private": true,
   "version": "0.0.1",
+  "description": "Апликација за вођење заједничке касе тима или организације — Firebase + React, без бекенда.",
+  "license": "MIT",
+  "author": "RSvlad",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RSvlad/Timska-kasa.git"
+  },
+  "homepage": "https://rsvlad.github.io/Timska-kasa/",
+  "bugs": {
+    "url": "https://github.com/RSvlad/Timska-kasa/issues"
+  },
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
