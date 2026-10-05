@@ -122,7 +122,7 @@ src/
 ├── finance/                    # Finance bounded context
 │   ├── domain/                 # FinanceRecord, Category, Fund (Фонд), Amount
 │   ├── application/            # useRecordList, useCategoryList, useFundList,
-│   │                           # useFundManager, useReceiptUpload
+│   │                           # fundService, useReceiptUpload
 │   ├── infrastructure/         # FinanceRecordRepository, CategoryRepository,
 │   │                           # FundRepository, ReceiptStorage
 │   └── ui/                     # Dashboard, RecordList, CategoryList, FundsPage

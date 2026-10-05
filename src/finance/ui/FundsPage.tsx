@@ -11,7 +11,7 @@ import {
   reserveIntoFund,
   releaseFromFund,
   freeBalanceByCurrency,
-} from "@finance/application/useFundManager";
+} from "@finance/application/fundService";
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
 import { formatAmount, isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
