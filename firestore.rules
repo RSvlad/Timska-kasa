@@ -50,7 +50,7 @@ service cloud.firestore {
         && d.counterparty is string
         && d.authorId is string
         && (!('description' in d) || d.description is string)
-        && (!('fundId' in d) || d.fundId is string)
+        && (!('fundId' in d) || (d.fundId is string && d.type == "Расход"))
         && (!('receiptUrl' in d) || d.receiptUrl is string);
     }
 

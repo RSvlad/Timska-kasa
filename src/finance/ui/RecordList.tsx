@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react";
 import {
   addRecord,
   editRecord,
+  FundChargeError,
   type NewFinanceRecord,
 } from "@finance/application/recordService";
 import { useRecordList } from "@finance/application/useRecordList";
@@ -106,8 +107,12 @@ export function RecordList({ role, currentUserId }: Props) {
       let recordId: string;
       try {
         recordId = await saveRecord(payload);
-      } catch {
-        setFormError("Запис није сачуван. Провери везу и покушај поново.");
+      } catch (e) {
+        setFormError(
+          e instanceof FundChargeError
+            ? e.message
+            : "Запис није сачуван. Провери везу и покушај поново."
+        );
         return;
       }
 
@@ -211,7 +216,7 @@ export function RecordList({ role, currentUserId }: Props) {
                   <button
                     key={t}
                     className={`type-btn ${form.type === t ? (t === "Приход" ? "income-active" : "expense-active") : ""}`}
-                    onClick={() => setForm({ ...form, type: t, categoryId: "" })}
+                    onClick={() => setForm({ ...form, type: t, categoryId: "", fundId: t === "Расход" ? form.fundId : "" })}
                   >
                     {t === "Приход" ? "↑ Приход" : "↓ Расход"}
                   </button>
@@ -280,7 +285,7 @@ export function RecordList({ role, currentUserId }: Props) {
               </div>
 
               {/* Ред 5: фонд (опционо — само ако постоје компатибилни фондови) */}
-              {compatibleFunds.length > 0 && (
+              {form.type === "Расход" && compatibleFunds.length > 0 && (
                 <div className="form-field">
                   <label className="field-label" htmlFor={`${uid}-6`}>
                     Фонд <span className="field-optional">(опционо — терети фонд уместо касе)</span>
