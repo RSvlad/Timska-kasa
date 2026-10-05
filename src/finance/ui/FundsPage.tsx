@@ -14,7 +14,7 @@ import {
 } from "@finance/application/useFundManager";
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
-import { formatAmount, isValidCurrency, normalizeCurrency } from "@finance/domain/Amount";
+import { formatAmount, isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
 
 interface Props {
@@ -71,9 +71,9 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
   async function handleTransfer() {
     if (busy) return;
-    const delta = Number(deltaInput);
-    if (!deltaInput || isNaN(delta) || delta <= 0) {
-      setErr("Унеси позитиван износ."); return;
+    const delta = parseAmountInput(deltaInput);
+    if (delta === null) {
+      setErr("Унеси позитиван износ (највише 2 децимале)."); return;
     }
     setErr("");
     setBusy(true);
@@ -93,9 +93,9 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
   async function handleEdit() {
     if (busy) return;
-    const cap = Number(editForm.capacity);
+    const cap = parseAmountInput(editForm.capacity);
     if (!editForm.name.trim()) { setErr("Назив је обавезан."); return; }
-    if (isNaN(cap) || cap <= 0) { setErr("Капацитет мора бити позитиван број."); return; }
+    if (cap === null) { setErr("Капацитет мора бити позитиван број (највише 2 децимале)."); return; }
     if (!isValidCurrency(editForm.currency)) { setErr("Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR)."); return; }
     setErr("");
     setBusy(true);
@@ -267,8 +267,8 @@ export function FundsPage({ role }: Props) {
 
   function validate(): string {
     if (!form.name.trim())                                          return "Назив је обавезан.";
-    if (!form.capacity || isNaN(Number(form.capacity)) || Number(form.capacity) <= 0)
-                                                                    return "Капацитет мора бити позитиван број.";
+    if (parseAmountInput(form.capacity) === null)
+                                                                    return "Капацитет мора бити позитиван број (највише 2 децимале).";
     if (!isValidCurrency(form.currency))                            return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
     return "";
   }
@@ -283,7 +283,7 @@ export function FundsPage({ role }: Props) {
       await addFund({
         name: form.name.trim(),
         description: form.description.trim() || undefined,
-        capacity: { value: Number(form.capacity), currency: normalizeCurrency(form.currency) },
+        capacity: { value: parseAmountInput(form.capacity) as number, currency: normalizeCurrency(form.currency) },
       });
       setForm(EMPTY_FORM);
       setOpen(false);

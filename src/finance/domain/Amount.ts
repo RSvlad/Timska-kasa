@@ -38,6 +38,17 @@ export function isValidCurrency(input: string): boolean {
   return supported ? supported.has(code) : true;
 }
 
+export const MAX_AMOUNT = 1e12;
+
+// Парсира унос износа: прихвата "10,5" и "10.5", највише 2 децимале, позитиван,
+// коначан и ≤ MAX_AMOUNT. Враћа null за све остало (Infinity, 1e21, hex, празно, ...).
+export function parseAmountInput(input: string): number | null {
+  const s = input.trim().replace(",", ".");
+  if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n > 0 && n <= MAX_AMOUNT ? n : null;
+}
+
 // Никад не баца изузетак: за неисправну валуту враћа "износ ШИФРА".
 export function formatAmount(value: number, currency: string): string {
   try {

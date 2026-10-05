@@ -12,7 +12,7 @@ import { useFundList } from "@finance/application/useFundList";
 import { useReceiptUpload } from "@finance/application/useReceiptUpload";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { RecordType } from "@finance/domain/Category";
-import { isValidCurrency, normalizeCurrency } from "@finance/domain/Amount";
+import { isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
 
 interface Props {
@@ -75,8 +75,8 @@ export function RecordList({ role, currentUserId }: Props) {
   }
 
   function validate(): string {
-    if (!form.value || isNaN(Number(form.value)) || Number(form.value) <= 0)
-      return "Износ мора бити позитиван број.";
+    if (parseAmountInput(form.value) === null)
+      return "Износ мора бити позитиван број (највише 2 децимале).";
     if (!isValidCurrency(form.currency)) return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
     if (!form.categoryId)          return "Категорија је обавезна.";
     if (!form.counterparty.trim()) return "Контрагент је обавезан.";
@@ -91,7 +91,7 @@ export function RecordList({ role, currentUserId }: Props) {
 
     const payload = {
       type:         form.type,
-      amount:       { value: Number(form.value), currency: normalizeCurrency(form.currency) },
+      amount:       { value: parseAmountInput(form.value) as number, currency: normalizeCurrency(form.currency) },
       dateTime:     new Date(form.dateTime),
       categoryId:   form.categoryId,
       counterparty: form.counterparty.trim(),
