@@ -7,13 +7,9 @@ import {
   addDoc,
   updateDoc,
   onSnapshot,
-  query,
-  where,
-  getDocs,
-  writeBatch,
 } from "firebase/firestore";
 import { db } from "@shared/infrastructure/firebase";
-import type { Category, RecordType } from "@finance/domain/Category";
+import type { Category } from "@finance/domain/Category";
 
 const COLLECTION = "categories";
 
@@ -54,37 +50,4 @@ export async function updateCategory(id: string, patch: CategoryPatch): Promise<
   }
   const ref = doc(db, COLLECTION, id);
   await updateDoc(ref, patch);
-}
-
-/**
- * Идемпотентна иницијализација системских категорија „Непознато".
- * Покреће само Admin при пријави (видети ADR-010, ADR-016).
- * За сваки RecordType проверава постојање; ствара само оне које недостају.
- */
-export async function ensureSystemCategories(): Promise<void> {
-  const types: RecordType[] = ["Приход", "Расход"];
-  const ref = collection(db, COLLECTION);
-
-  const snapshot = await getDocs(
-    query(ref, where("system", "==", true))
-  );
-  const existing = new Set(
-    snapshot.docs.map((d) => d.data().type as RecordType)
-  );
-
-  const missing = types.filter((t) => !existing.has(t));
-  if (missing.length === 0) return;
-
-  const batch = writeBatch(db);
-  for (const type of missing) {
-    const newDoc = doc(ref);
-    const category: NewCategory = {
-      name: "Непознато",
-      type,
-      active: true,
-      system: true,
-    };
-    batch.set(newDoc, category);
-  }
-  await batch.commit();
 }
