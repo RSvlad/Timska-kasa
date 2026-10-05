@@ -14,7 +14,7 @@
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-12-ffca28?logo=firebase&logoColor=black)
 
-[**🚀 Демо**](https://rsvlad.github.io/Timska-kasa/) · [Речник домена](glossary.md) · [Пријава грешке](https://github.com/RSvlad/Timska-kasa/issues/new?template=bug_report.yml) · [Предлог функције](https://github.com/RSvlad/Timska-kasa/issues/new?template=feature_request.yml)
+[**🚀 Демо**](https://rsvlad.github.io/Timska-kasa/) · [Речник домена](docs/glossary.md) · [Пријава грешке](https://github.com/RSvlad/Timska-kasa/issues/new?template=bug_report.yml) · [Предлог функције](https://github.com/RSvlad/Timska-kasa/issues/new?template=feature_request.yml)
 
 </div>
 
@@ -24,12 +24,12 @@
 
 Четири стуба на којима је апликација заснована:
 
-| | Принцип | Шта то значи |
-|---|---|---|
-| 👁️ | **Прегледност** | Лак приступ информацијама — дашборд, филтери и историја промета на једном месту |
-| 🔍 | **Транспарентност** | Свака промена у каси остаје трајно евидентирана; ништа се тихо не брише (меко брисање, потпуна историја) |
-| 🔒 | **Сигурност** | Google/Firebase инфраструктура и строго раздвојене улоге приступа (Admin / Viewer) |
-| 🆓 | **Доступност** | Бесплатан хостинг (GitHub Pages) и бесплатна Firebase инфраструктура — нула трошкова покретања |
+|     | Принцип             | Шта то значи                                                                                             |
+| --- | ------------------- | -------------------------------------------------------------------------------------------------------- |
+| 👁️  | **Прегледност**     | Лак приступ информацијама — дашборд, филтери и историја промета на једном месту                          |
+| 🔍  | **Транспарентност** | Свака промена у каси остаје трајно евидентирана; ништа се тихо не брише (меко брисање, потпуна историја) |
+| 🔒  | **Сигурност**       | Google/Firebase инфраструктура и строго раздвојене улоге приступа (Admin / Viewer)                       |
+| 🆓  | **Доступност**      | Бесплатан хостинг (GitHub Pages) и бесплатна Firebase инфраструктура — нула трошкова покретања           |
 
 ---
 
@@ -88,12 +88,12 @@
 
 Сваки bounded context у коду прати исти слојевити распоред:
 
-| Слој | Одговорност |
-|---|---|
-| `domain/` | Ентитети, агрегати, вредносни објекти — чиста бизнис логика, без зависности од Firebase-а |
-| `application/` | React хукови који оркестрирају domain и infrastructure слој (use case-ови) |
-| `infrastructure/` | Repository имплементације — комуникација са Firestore/Storage |
-| `ui/` | React компоненте — презентациони слој |
+| Слој              | Одговорност                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `domain/`         | Ентитети, агрегати, вредносни објекти — чиста бизнис логика, без зависности од Firebase-а |
+| `application/`    | React хукови који оркестрирају domain и infrastructure слој (use case-ови)                |
+| `infrastructure/` | Repository имплементације — комуникација са Firestore/Storage                             |
+| `ui/`             | React компоненте — презентациони слој                                                     |
 
 Домен нема сопствени бекенд сервер: безбедност и интегритет података ослањају се искључиво на Firestore security rules, чиме је фронтенд-само приступ безбедан и без додатне инфраструктуре.
 
@@ -117,22 +117,22 @@
 
 Систем нема јавну регистрацију. Приступ имају искључиво корисници на **whitelist-и** (Firestore колекција `allowedUsers`), коју управља Admin директно кроз Firebase конзолу. Пријава се врши преко Google Sign-In.
 
-Потпун речник домена налази се у [`glossary.md`](glossary.md).
+Потпун речник домена налази се у [`docs/glossary.md`](docs/glossary.md), а архитектонске одлуке у [`docs/adr/`](docs/adr/README.md).
 
 ---
 
 ## Tech stack
 
-| Слој | Технологија |
-|---|---|
-| Frontend | React 18 + TypeScript, Vite |
-| Аутентификација | Firebase Authentication (Google Sign-In) |
-| База података | Cloud Firestore |
-| Складиштење фајлова | Firebase Storage (слике рачуна) |
-| Хостовање | GitHub Pages (статички build) |
-| CI | GitHub Actions (type-check + build) |
-| Одржавање зависности | Dependabot |
-| Бекенд сервер | — нема; сва логика извршава се на клијенту уз Firestore security rules |
+| Слој                 | Технологија                                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| Frontend             | React 18 + TypeScript, Vite                                            |
+| Аутентификација      | Firebase Authentication (Google Sign-In)                               |
+| База података        | Cloud Firestore                                                        |
+| Складиштење фајлова  | Firebase Storage (слике рачуна)                                        |
+| Хостовање            | GitHub Pages (статички build)                                          |
+| CI                   | GitHub Actions (type-check + build)                                    |
+| Одржавање зависности | Dependabot                                                             |
+| Бекенд сервер        | — нема; сва логика извршава се на клијенту уз Firestore security rules |
 
 ---
 
@@ -189,12 +189,12 @@ npm run dev
 
 ### Доступне скрипте
 
-| Скрипта | Опис |
-|---|---|
-| `npm run dev` | Development сервер са hot reload-ом |
-| `npm run build` | Type-check (`tsc -b`) и production build |
-| `npm run preview` | Локални преглед production build-а |
-| `npm run deploy` | Build и објава на GitHub Pages |
+| Скрипта           | Опис                                     |
+| ----------------- | ---------------------------------------- |
+| `npm run dev`     | Development сервер са hot reload-ом      |
+| `npm run build`   | Type-check (`tsc -b`) и production build |
+| `npm run preview` | Локални преглед production build-а       |
+| `npm run deploy`  | Build и објава на GitHub Pages           |
 
 ### Променљиве окружења
 
