@@ -22,7 +22,7 @@ const VIEW_TITLES: Record<View, string> = {
 };
 
 export default function App() {
-  const { user, loading, signIn, signOutUser } = useAuth();
+  const { user, loading, deniedEmail, error, signIn, signOutUser } = useAuth();
   const [view, setView] = useState<View>("dashboard");
 
   if (loading) {
@@ -38,10 +38,28 @@ export default function App() {
       <div className="center-screen login-screen">
         <div className="login-logo">💰</div>
         <h1 className="login-title">Тимска каса</h1>
-        <p className="login-sub">Пријавите се да бисте наставили</p>
-        <button className="primary login-btn" onClick={signIn}>
-          Пријави се преко Google налога
-        </button>
+        {deniedEmail ? (
+          <>
+            <p className="login-sub" role="alert">
+              Приступ одбијен: налог {deniedEmail} није на листи дозвољених корисника.
+            </p>
+            <button className="primary login-btn" onClick={signOutUser}>
+              Одјави се
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="login-sub">Пријавите се да бисте наставили</p>
+            {error && (
+              <p className="login-sub" role="alert" style={{ color: "var(--danger, #c0392b)" }}>
+                {error}
+              </p>
+            )}
+            <button className="primary login-btn" onClick={signIn}>
+              Пријави се преко Google налога
+            </button>
+          </>
+        )}
       </div>
     );
   }
