@@ -14,6 +14,7 @@ import {
 } from "@finance/application/fundService";
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
+import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import { formatAmount, isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
 
@@ -46,7 +47,7 @@ interface FundCardProps {
   isAdmin: boolean;
   freeInCurrency: number;
   allFunds: Fund[];
-  records: ReturnType<typeof useRecordList>;
+  records: FinanceRecord[];
 }
 
 function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCardProps) {
