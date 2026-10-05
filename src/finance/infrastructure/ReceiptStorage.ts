@@ -30,6 +30,17 @@ function assertValid(file: File): void {
   }
 }
 
+/** Уклања из имена фајла све осим слова, цифара, тачке, доње црте и цртице (без `/`, `..`). */
+function sanitizeFileName(name: string): string {
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[^\w.-]+/g, "_")
+    .replace(/\.{2,}/g, ".")
+    .replace(/^[._]+/, "")
+    .slice(-100);
+  return cleaned || "receipt";
+}
+
 /**
  * Отпрема слику рачуна за дати запис и враћа download URL и путању објекта.
  * Валидација се ради пре отпремања. Претходне рачуне треба обрисати тек након
@@ -40,7 +51,7 @@ export async function uploadReceipt(
   file: File
 ): Promise<{ url: string; path: string }> {
   assertValid(file);
-  const path = `receipts/${recordId}/${Date.now()}_${file.name}`;
+  const path = `receipts/${recordId}/${Date.now()}_${sanitizeFileName(file.name)}`;
   const storageRef = ref(storage, path);
   await uploadBytes(storageRef, file, { contentType: file.type });
   return { url: await getDownloadURL(storageRef), path };
