@@ -15,7 +15,7 @@ interface AllowedUserDoc {
  * Враћа null ако корисник није на whitelist-у (нема приступ систему).
  */
 export async function loadUser(uid: string, email: string): Promise<User | null> {
-  const ref = doc(db, "allowedUsers", email);
+  const ref = doc(db, "allowedUsers", email.toLowerCase());
   const snap = await getDoc(ref);
 
   if (!snap.exists()) {

@@ -6,18 +6,24 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAllowed() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email));
+    // allowedUsers doc ID-јеви су email-ови малим словима.
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
     }
 
+    function isAllowed() {
+      return isVerified()
+        && exists(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email.lower()));
+    }
+
+    // Један get уместо exists + get.
     function isAdmin() {
-      return isAllowed()
-        && get(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)).data.role == "Admin";
+      return isVerified()
+        && get(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email.lower())).data.role == "Admin";
     }
 
     match /allowedUsers/{email} {
-      allow read: if isSignedIn() && request.auth.token.email == email;
+      allow read: if isVerified() && request.auth.token.email.lower() == email;
       allow write: if false;
     }
 

@@ -6,14 +6,20 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function isAllowed() {
-      return isSignedIn()
-        && firestore.exists(/databases/(default)/documents/allowedUsers/$(request.auth.token.email));
+    // allowedUsers doc ID-јеви су email-ови малим словима.
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
     }
 
+    function isAllowed() {
+      return isVerified()
+        && firestore.exists(/databases/(default)/documents/allowedUsers/$(request.auth.token.email.lower()));
+    }
+
+    // Један cross-service get уместо exists + get.
     function isAdmin() {
-      return isAllowed()
-        && firestore.get(/databases/(default)/documents/allowedUsers/$(request.auth.token.email)).data.role == "Admin";
+      return isVerified()
+        && firestore.get(/databases/(default)/documents/allowedUsers/$(request.auth.token.email.lower())).data.role == "Admin";
     }
 
     // Путања: receipts/{recordId}/{filename} — видети ReceiptStorage.ts.
