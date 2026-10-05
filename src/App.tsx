@@ -73,7 +73,7 @@ export default function App() {
         <span className="top-bar-title">{VIEW_TITLES[view]}</span>
         <div className="top-bar-right">
           <span className="role-badge">{user.role}</span>
-          <button className="ghost icon-btn" title="Одјава" onClick={signOutUser}>⏏</button>
+          <button className="ghost icon-btn" title="Одјава" aria-label="Одјава" onClick={signOutUser}>⏏</button>
         </div>
       </header>
 

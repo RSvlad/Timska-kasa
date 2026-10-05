@@ -1,7 +1,7 @@
 // UI: Страница за управљање Фондовима (CRUD + алокација/дезалокација).
 // Само Admin може да мутира; Viewer само чита.
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useFundList } from "@finance/application/useFundList";
 import { useRecordList } from "@finance/application/useRecordList";
 import {
@@ -50,6 +50,7 @@ interface FundCardProps {
 }
 
 function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCardProps) {
+  const uid = useId();
   const [deltaInput, setDeltaInput] = useState("");
   const [mode, setMode]             = useState<"reserve" | "release" | null>(null);
   const [err, setErr]               = useState("");
@@ -130,21 +131,21 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       {editing ? (
         <div className="fund-edit-form">
           <div className="form-field">
-            <label className="field-label">Назив</label>
-            <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+            <label className="field-label" htmlFor={`${uid}-1`}>Назив</label>
+            <input id={`${uid}-1`} value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
           </div>
           <div className="form-field">
-            <label className="field-label">Опис <span className="field-optional">(опционо)</span></label>
-            <input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+            <label className="field-label" htmlFor={`${uid}-2`}>Опис <span className="field-optional">(опционо)</span></label>
+            <input id={`${uid}-2`} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
           </div>
           <div className="form-row">
             <div className="form-field form-field--grow">
-              <label className="field-label">Капацитет</label>
-              <input inputMode="decimal" value={editForm.capacity} onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value })} />
+              <label className="field-label" htmlFor={`${uid}-3`}>Капацитет</label>
+              <input id={`${uid}-3`} inputMode="decimal" value={editForm.capacity} onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value })} />
             </div>
             <div className="form-field form-field--currency">
-              <label className="field-label">Валута</label>
-              <input maxLength={3} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
+              <label className="field-label" htmlFor={`${uid}-4`}>Валута</label>
+              <input id={`${uid}-4`} maxLength={3} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
             </div>
           </div>
           {err && <p className="error-text">{err}</p>}
@@ -210,10 +211,10 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                 <div className="fund-transfer-form">
                   <div className="form-row">
                     <div className="form-field form-field--grow">
-                      <label className="field-label">
+                      <label className="field-label" htmlFor={`${uid}-5`}>
                         {mode === "reserve" ? `Алоцирај (слободно у тимској каси: ${freeInCurrency.toLocaleString("sr-RS")} ${fund.capacity.currency})` : "Дезалоцирај"}
                       </label>
-                      <input
+                      <input id={`${uid}-5`}
                         inputMode="decimal"
                         placeholder="0.00"
                         value={deltaInput}
@@ -252,6 +253,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 // ── Главна компонента ──────────────────────────────────────────────────────
 
 export function FundsPage({ role }: Props) {
+  const uid = useId();
   const { data: funds }   = useFundList();
   const { data: records } = useRecordList();
   const isAdmin = role === "Admin";
@@ -307,16 +309,16 @@ export function FundsPage({ role }: Props) {
           {open && (
             <div>
               <div className="form-field">
-                <label className="field-label">Назив</label>
-                <input
+                <label className="field-label" htmlFor={`${uid}-6`}>Назив</label>
+                <input id={`${uid}-6`}
                   placeholder="Нпр. Путни трошкови"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </div>
               <div className="form-field">
-                <label className="field-label">Опис <span className="field-optional">(опционо)</span></label>
-                <input
+                <label className="field-label" htmlFor={`${uid}-7`}>Опис <span className="field-optional">(опционо)</span></label>
+                <input id={`${uid}-7`}
                   placeholder=""
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -324,8 +326,8 @@ export function FundsPage({ role }: Props) {
               </div>
               <div className="form-row">
                 <div className="form-field form-field--grow">
-                  <label className="field-label">Капацитет</label>
-                  <input
+                  <label className="field-label" htmlFor={`${uid}-8`}>Капацитет</label>
+                  <input id={`${uid}-8`}
                     inputMode="decimal"
                     placeholder="0.00"
                     value={form.capacity}
@@ -333,8 +335,8 @@ export function FundsPage({ role }: Props) {
                   />
                 </div>
                 <div className="form-field form-field--currency">
-                  <label className="field-label">Валута</label>
-                  <input
+                  <label className="field-label" htmlFor={`${uid}-9`}>Валута</label>
+                  <input id={`${uid}-9`}
                     placeholder="RSD"
                     maxLength={3}
                     value={form.currency}

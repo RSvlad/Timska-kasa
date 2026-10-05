@@ -1,6 +1,6 @@
 // UI: Листа категорија — chip картице, accordion по типу (само Admin може мењати).
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   createCategory,
   updateCategory,
@@ -22,6 +22,7 @@ const TYPE_SECTIONS: { type: RecordType; label: string; accent: string }[] = [
 ];
 
 export function CategoryList({ role }: Props) {
+  const uid = useId();
   const { data: categories } = useCategoryList();
   const isAdmin    = role === "Admin";
 
@@ -134,8 +135,8 @@ export function CategoryList({ role }: Props) {
                           if (e.key === "Escape") setEditId(null);
                         }}
                       />
-                      <button className="chip-action-btn" disabled={busy} onClick={() => handleEditSave(cat)}>✓</button>
-                      <button className="chip-action-btn" disabled={busy} onClick={() => setEditId(null)}>✕</button>
+                      <button className="chip-action-btn" aria-label="Сачувај" disabled={busy} onClick={() => handleEditSave(cat)}>✓</button>
+                      <button className="chip-action-btn" aria-label="Откажи" disabled={busy} onClick={() => setEditId(null)}>✕</button>
                     </div>
                   ) : (
                     <div className="cat-chip-view">
@@ -146,6 +147,7 @@ export function CategoryList({ role }: Props) {
                           <button
                             className="chip-action-btn"
                             title="Поново активирај"
+                            aria-label="Поново активирај"
                             disabled={busy}
                             onClick={() => handleReactivate(cat)}
                           >↺</button>
@@ -156,11 +158,13 @@ export function CategoryList({ role }: Props) {
                           <button
                             className="chip-action-btn"
                             title="Уреди"
+                            aria-label="Уреди"
                             onClick={() => { setEditId(cat.id); setEditName(cat.name); }}
                           >✎</button>
                           <button
                             className="chip-action-btn danger"
                             title="Деактивирај"
+                            aria-label="Деактивирај"
                             onClick={() => setPendingDeactivate(cat)}
                           >✕</button>
                         </div>
@@ -198,8 +202,8 @@ export function CategoryList({ role }: Props) {
                 ))}
               </div>
               <div className="form-field">
-                <label className="field-label">Назив категорије</label>
-                <input
+                <label className="field-label" htmlFor={`${uid}-1`}>Назив категорије</label>
+                <input id={`${uid}-1`}
                   placeholder="Нпр. Закупнина"
                   value={newName}
                   maxLength={MAX_NAME_LENGTH}

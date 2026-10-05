@@ -1,6 +1,6 @@
 // UI: Листа финансијских записа са формом за унос/измену (само Admin).
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   createFinanceRecord,
   updateFinanceRecord,
@@ -40,6 +40,7 @@ function emptyForm() {
 }
 
 export function RecordList({ role, currentUserId }: Props) {
+  const uid = useId();
   const { data: records }    = useRecordList();
   const { data: categories } = useCategoryList();
   const { data: funds }      = useFundList();
@@ -220,8 +221,8 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Ред 2: износ + валута */}
               <div className="form-row">
                 <div className="form-field form-field--grow">
-                  <label className="field-label">Износ</label>
-                  <input
+                  <label className="field-label" htmlFor={`${uid}-1`}>Износ</label>
+                  <input id={`${uid}-1`}
                     inputMode="decimal"
                     placeholder="0.00"
                     value={form.value}
@@ -229,8 +230,8 @@ export function RecordList({ role, currentUserId }: Props) {
                   />
                 </div>
                 <div className="form-field form-field--currency">
-                  <label className="field-label">Валута</label>
-                  <input
+                  <label className="field-label" htmlFor={`${uid}-2`}>Валута</label>
+                  <input id={`${uid}-2`}
                     placeholder="RSD"
                     maxLength={3}
                     value={form.currency}
@@ -246,8 +247,8 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Ред 3: категорија */}
               <div className="form-field">
-                <label className="field-label">Категорија</label>
-                <select
+                <label className="field-label" htmlFor={`${uid}-3`}>Категорија</label>
+                <select id={`${uid}-3`}
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                 >
@@ -260,8 +261,8 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Ред 4а: датум */}
               <div className="form-field">
-                <label className="field-label">Датум и време</label>
-                <input
+                <label className="field-label" htmlFor={`${uid}-4`}>Датум и време</label>
+                <input id={`${uid}-4`}
                   type="datetime-local"
                   value={form.dateTime}
                   onChange={(e) => setForm({ ...form, dateTime: e.target.value })}
@@ -270,8 +271,8 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Ред 5: контрагент */}
               <div className="form-field">
-                <label className="field-label">Контрагент</label>
-                <input
+                <label className="field-label" htmlFor={`${uid}-5`}>Контрагент</label>
+                <input id={`${uid}-5`}
                   placeholder="Нпр. Прометеј д.о.о."
                   value={form.counterparty}
                   onChange={(e) => setForm({ ...form, counterparty: e.target.value })}
@@ -281,10 +282,10 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Ред 5: фонд (опционо — само ако постоје компатибилни фондови) */}
               {compatibleFunds.length > 0 && (
                 <div className="form-field">
-                  <label className="field-label">
+                  <label className="field-label" htmlFor={`${uid}-6`}>
                     Фонд <span className="field-optional">(опционо — терети фонд уместо касе)</span>
                   </label>
-                  <select
+                  <select id={`${uid}-6`}
                     value={form.fundId}
                     onChange={(e) => setForm({ ...form, fundId: e.target.value })}
                   >
@@ -300,8 +301,8 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Ред 6: опис */}
               <div className="form-field">
-                <label className="field-label">Опис <span className="field-optional">(опционо)</span></label>
-                <input
+                <label className="field-label" htmlFor={`${uid}-7`}>Опис <span className="field-optional">(опционо)</span></label>
+                <input id={`${uid}-7`}
                   placeholder=""
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
