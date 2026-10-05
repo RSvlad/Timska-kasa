@@ -39,9 +39,7 @@ function resolveContentType(file: File): string {
 
 function assertValid(file: File): void {
   if (!ALLOWED_TYPES.includes(resolveContentType(file))) {
-    throw new ReceiptValidationError(
-      "Дозвољени формати: JPEG, PNG, WEBP, HEIC."
-    );
+    throw new ReceiptValidationError("Дозвољени формати: JPEG, PNG, WEBP, HEIC.");
   }
   if (file.size > MAX_SIZE_BYTES) {
     throw new ReceiptValidationError("Слика не сме бити већа од 10MB.");
@@ -93,8 +91,6 @@ export async function deleteReceipt(recordId: string, keepPath?: string): Promis
   const folderRef = ref(storage, `receipts/${recordId}`);
   const { items } = await listAll(folderRef);
   await Promise.all(
-    items
-      .filter((item) => item.fullPath !== keepPath)
-      .map((item) => deleteObject(item))
+    items.filter((item) => item.fullPath !== keepPath).map((item) => deleteObject(item)),
   );
 }

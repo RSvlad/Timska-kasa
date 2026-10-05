@@ -69,7 +69,9 @@ export function ConfirmDialog({
     <div
       className="confirm-overlay"
       role="presentation"
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
     >
       <div
         ref={dialogRef}
@@ -79,8 +81,12 @@ export function ConfirmDialog({
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-message"
       >
-        <p id="confirm-dialog-title" className="confirm-title">{title}</p>
-        <p id="confirm-dialog-message" className="confirm-message">{message}</p>
+        <p id="confirm-dialog-title" className="confirm-title">
+          {title}
+        </p>
+        <p id="confirm-dialog-message" className="confirm-message">
+          {message}
+        </p>
         <div className="form-actions">
           <button
             ref={confirmRef}
@@ -89,7 +95,9 @@ export function ConfirmDialog({
           >
             {confirmLabel}
           </button>
-          <button className="ghost" onClick={onCancel}>{cancelLabel}</button>
+          <button className="ghost" onClick={onCancel}>
+            {cancelLabel}
+          </button>
         </div>
       </div>
     </div>

@@ -1,19 +1,8 @@
 // Application: AuthContext — повезује Firebase Auth сесију са домен моделом User.
 // Корисник без whitelist уноса нема приступ (null role → приступ одбијен у UI).
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import {
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-  signOut,
-} from "firebase/auth";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { auth } from "@shared/infrastructure/firebase";
 import { loadUser } from "@identity/infrastructure/UserRepository";
 import { seedSystemCategories } from "@finance/infrastructure/seedSystemCategories";
@@ -88,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(
         code === "auth/popup-blocked"
           ? "Прегледач је блокирао прозор за пријаву. Дозволите искачуће прозоре."
-          : "Пријава није успела. Покушајте поново."
+          : "Пријава није успела. Покушајте поново.",
       );
     }
   }
@@ -104,9 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, deniedEmail, error, signIn, signOutUser }}
-    >
+    <AuthContext.Provider value={{ user, loading, deniedEmail, error, signIn, signOutUser }}>
       {children}
     </AuthContext.Provider>
   );

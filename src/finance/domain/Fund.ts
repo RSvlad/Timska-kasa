@@ -9,8 +9,8 @@ export interface Fund {
   readonly id: string;
   readonly name: string;
   readonly description?: string;
-  readonly capacity: Amount;   // лимит фонда (value + currency)
-  readonly reserved: number;   // тренутно алоцирано; 0 ≤ reserved ≤ capacity.value
+  readonly capacity: Amount; // лимит фонда (value + currency)
+  readonly reserved: number; // тренутно алоцирано; 0 ≤ reserved ≤ capacity.value
   readonly createdAt: Date;
 }
 

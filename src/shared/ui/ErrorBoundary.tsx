@@ -1,4 +1,3 @@
-
 // UI: Хвата грешке рендеровања, да једна лоша ставка не обори целу апликацију.
 
 import { Component, type ErrorInfo, type ReactNode } from "react";

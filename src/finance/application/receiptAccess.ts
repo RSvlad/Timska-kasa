@@ -6,7 +6,9 @@ import { resolveReceiptUrl } from "@finance/infrastructure/ReceiptStorage";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 
 /** Извор слике рачуна: нова путања има предност над старим трајним URL-ом. */
-export function receiptSource(r: Pick<FinanceRecord, "receiptPath" | "receiptUrl">): string | undefined {
+export function receiptSource(
+  r: Pick<FinanceRecord, "receiptPath" | "receiptUrl">,
+): string | undefined {
   return r.receiptPath ?? r.receiptUrl;
 }
 
@@ -18,9 +20,13 @@ export function useReceiptUrl(source: string | undefined): string | null {
     if (!source) return;
     let cancelled = false;
     resolveReceiptUrl(source)
-      .then((url) => { if (!cancelled) setResolved({ source, url }); })
+      .then((url) => {
+        if (!cancelled) setResolved({ source, url });
+      })
       .catch(() => {});
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [source]);
 
   return source && resolved?.source === source ? resolved.url : null;

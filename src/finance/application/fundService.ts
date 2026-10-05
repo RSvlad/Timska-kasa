@@ -18,7 +18,7 @@ import { toMinor, fromMinor } from "@finance/domain/Amount";
 // Слободна средства у тимској каси по валути = салдо − Σ reserved фондова те валуте.
 export function freeBalanceByCurrency(
   records: FinanceRecord[],
-  funds: Fund[]
+  funds: Fund[],
 ): Record<string, number> {
   // Акумулација у целобројним стотинкама (без грешке плутајућег зареза).
   const minor: Record<string, number> = {};
@@ -26,7 +26,7 @@ export function freeBalanceByCurrency(
     const cur = r.amount.currency;
     if (!minor[cur]) minor[cur] = 0;
     if (r.type === "Приход") minor[cur] += toMinor(r.amount.value);
-    else                     minor[cur] -= toMinor(r.amount.value);
+    else minor[cur] -= toMinor(r.amount.value);
   }
   // одузми алоцирано из фондова
   for (const f of funds) {
@@ -45,7 +45,7 @@ export async function addFund(fund: NewFund): Promise<string> {
 
 export async function editFund(
   id: string,
-  patch: Partial<Pick<Fund, "name" | "description" | "capacity">>
+  patch: Partial<Pick<Fund, "name" | "description" | "capacity">>,
 ): Promise<void> {
   return updateFund(id, patch);
 }
@@ -56,7 +56,7 @@ export async function removeFund(fund: Fund, records: FinanceRecord[]): Promise<
   const refs = records.filter((r) => r.fundId === fund.id).length;
   if (refs > 0)
     throw new Error(
-      `Фонд се не може обрисати: референцира га ${refs} запис(а). Прво уклони везу у записима.`
+      `Фонд се не може обрисати: референцира га ${refs} запис(а). Прво уклони везу у записима.`,
     );
   return deleteFund(fund.id);
 }
@@ -69,19 +69,19 @@ export async function reserveIntoFund(
   fund: Fund,
   delta: number,
   records: FinanceRecord[],
-  allFunds: Fund[]
+  allFunds: Fund[],
 ): Promise<void> {
   if (delta <= 0) throw new Error("Износ мора бити позитиван.");
   const newReserved = fromMinor(toMinor(fund.reserved) + toMinor(delta));
   if (newReserved > fund.capacity.value)
     throw new Error(
-      `Прелази капацитет фонда (макс. ${fromMinor(toMinor(fund.capacity.value) - toMinor(fund.reserved))} ${fund.capacity.currency}).`
+      `Прелази капацитет фонда (макс. ${fromMinor(toMinor(fund.capacity.value) - toMinor(fund.reserved))} ${fund.capacity.currency}).`,
     );
   const free = freeBalanceByCurrency(records, allFunds);
   const freeCur = free[fund.capacity.currency] ?? 0;
   if (delta > freeCur)
     throw new Error(
-      `Нема довољно слободних средстава у тимској каси (слободно: ${freeCur} ${fund.capacity.currency}).`
+      `Нема довољно слободних средстава у тимској каси (слободно: ${freeCur} ${fund.capacity.currency}).`,
     );
   await adjustFundReserved(fund.id, delta);
 }
@@ -95,7 +95,7 @@ export async function releaseFromFund(fund: Fund, delta: number): Promise<void> 
   const newReserved = fromMinor(toMinor(fund.reserved) - toMinor(delta));
   if (newReserved < 0)
     throw new Error(
-      `Не може се дезалоцирати ${delta} — тренутно алоцирано само ${fund.reserved} ${fund.capacity.currency}.`
+      `Не може се дезалоцирати ${delta} — тренутно алоцирано само ${fund.reserved} ${fund.capacity.currency}.`,
     );
   await adjustFundReserved(fund.id, -delta);
 }

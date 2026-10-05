@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
+import prettier from "eslint-config-prettier";
 
 export default tseslint.config(
   { ignores: ["dist", "node_modules"] },
@@ -15,4 +16,5 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["error", { ignoreRestSiblings: true }],
     },
   },
+  prettier,
 );

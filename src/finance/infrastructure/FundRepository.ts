@@ -39,7 +39,7 @@ function fromDoc(id: string, data: Partial<FundDoc>): Fund | null {
 
 export function subscribeFunds(
   callback: (funds: Fund[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   const ref = collection(db, COLLECTION);
   return onSnapshot(
@@ -50,7 +50,7 @@ export function subscribeFunds(
         .filter((f): f is Fund => f !== null);
       callback(funds);
     },
-    (error) => onError?.(error)
+    (error) => onError?.(error),
   );
 }
 
@@ -76,11 +76,11 @@ export async function adjustFundReserved(id: string, delta: number): Promise<voi
     const next = data.reserved + delta;
     if (next < 0)
       throw new Error(
-        `Не може се дезалоцирати ${-delta} — тренутно алоцирано само ${data.reserved} ${data.capacity.currency}.`
+        `Не може се дезалоцирати ${-delta} — тренутно алоцирано само ${data.reserved} ${data.capacity.currency}.`,
       );
     if (next > data.capacity.value)
       throw new Error(
-        `Прелази капацитет фонда (макс. ${data.capacity.value - data.reserved} ${data.capacity.currency}).`
+        `Прелази капацитет фонда (макс. ${data.capacity.value - data.reserved} ${data.capacity.currency}).`,
       );
     tx.update(ref, { reserved: next });
   });
@@ -88,7 +88,7 @@ export async function adjustFundReserved(id: string, delta: number): Promise<voi
 
 export async function updateFund(
   id: string,
-  patch: Partial<Pick<Fund, "name" | "description" | "capacity">>
+  patch: Partial<Pick<Fund, "name" | "description" | "capacity">>,
 ): Promise<void> {
   const data: Record<string, unknown> = { ...patch };
   // `undefined` је недозвољен у updateDoc; за брисање опционог поља треба deleteField().
@@ -104,11 +104,11 @@ export async function updateFund(
     if (patch.capacity) {
       if (patch.capacity.currency !== cur.capacity.currency && cur.reserved > 0)
         throw new Error(
-          `Валута се не може мењати док је у фонду алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај.`
+          `Валута се не може мењати док је у фонду алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај.`,
         );
       if (patch.capacity.value < cur.reserved)
         throw new Error(
-          `Капацитет не може бити мањи од алоцираног износа (${cur.reserved} ${cur.capacity.currency}).`
+          `Капацитет не може бити мањи од алоцираног износа (${cur.reserved} ${cur.capacity.currency}).`,
         );
     }
     tx.update(ref, data);
@@ -125,7 +125,7 @@ export async function deleteFund(id: string): Promise<void> {
     const cur = snap.data() as Pick<FundDoc, "reserved" | "capacity">;
     if (cur.reserved > 0)
       throw new Error(
-        `Фонд има алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај средства.`
+        `Фонд има алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај средства.`,
       );
     tx.delete(ref);
   });

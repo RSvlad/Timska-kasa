@@ -14,35 +14,36 @@ interface Props {
 const MAX_NAME_LENGTH = 40;
 
 const TYPE_SECTIONS: { type: RecordType; label: string; accent: string }[] = [
-  { type: "Приход", label: "Приходи",  accent: "income" },
-  { type: "Расход", label: "Расходи",  accent: "expense" },
+  { type: "Приход", label: "Приходи", accent: "income" },
+  { type: "Расход", label: "Расходи", accent: "expense" },
 ];
 
 export function CategoryList({ role }: Props) {
   const uid = useId();
   const { data: categories } = useCategoryList();
-  const isAdmin    = role === "Admin";
+  const isAdmin = role === "Admin";
 
-  const [newName,    setNewName]    = useState("");
-  const [newType,    setNewType]    = useState<RecordType>("Приход");
-  const [formError,  setFormError]  = useState("");
-  const [formOpen,   setFormOpen]   = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newType, setNewType] = useState<RecordType>("Приход");
+  const [formError, setFormError] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
 
-  const [editId,   setEditId]   = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
   const [pendingDeactivate, setPendingDeactivate] = useState<Category | null>(null);
 
-  const [busy,        setBusy]        = useState(false);
+  const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
 
   /** Враћа поруку о грешци или "" ако је назив валидан (дупликат се проверава по типу, без разлике у величини слова). */
   function validateName(name: string, type: RecordType, excludeId?: string): string {
     if (!name) return "Назив је обавезан.";
-    if (name.length > MAX_NAME_LENGTH) return `Назив може имати највише ${MAX_NAME_LENGTH} знакова.`;
+    if (name.length > MAX_NAME_LENGTH)
+      return `Назив може имати највише ${MAX_NAME_LENGTH} знакова.`;
     const key = name.toLocaleLowerCase("sr");
     const duplicate = categories.some(
-      (c) => c.id !== excludeId && c.type === type && c.name.trim().toLocaleLowerCase("sr") === key
+      (c) => c.id !== excludeId && c.type === type && c.name.trim().toLocaleLowerCase("sr") === key,
     );
     return duplicate ? "Категорија са тим називом већ постоји." : "";
   }
@@ -66,7 +67,10 @@ export function CategoryList({ role }: Props) {
   async function handleCreate() {
     const trimmed = newName.trim();
     const error = validateName(trimmed, newType);
-    if (error) { setFormError(error); return; }
+    if (error) {
+      setFormError(error);
+      return;
+    }
     setFormError("");
     const ok = await run(async () => {
       await addCategory({ name: trimmed, type: newType, active: true, system: false });
@@ -91,16 +95,25 @@ export function CategoryList({ role }: Props) {
   async function handleEditSave(cat: Category) {
     const trimmed = editName.trim();
     const error = validateName(trimmed, cat.type, cat.id);
-    if (error) { setActionError(error); return; }
-    if (trimmed === cat.name) { setEditId(null); return; }
+    if (error) {
+      setActionError(error);
+      return;
+    }
+    if (trimmed === cat.name) {
+      setEditId(null);
+      return;
+    }
     const ok = await run(() => editCategory(cat.id, { name: trimmed }));
     if (ok) setEditId(null);
   }
 
   return (
     <div className="cat-root">
-
-      {actionError && <p className="error-text" role="alert">{actionError}</p>}
+      {actionError && (
+        <p className="error-text" role="alert">
+          {actionError}
+        </p>
+      )}
 
       {/* ── Accordion по типу ── */}
       {TYPE_SECTIONS.map(({ type, label, accent }) => {
@@ -115,10 +128,7 @@ export function CategoryList({ role }: Props) {
 
             <div className="cat-chip-grid">
               {list.map((cat) => (
-                <div
-                  key={cat.id}
-                  className={`cat-chip ${accent} ${cat.active ? "" : "inactive"}`}
-                >
+                <div key={cat.id} className={`cat-chip ${accent} ${cat.active ? "" : "inactive"}`}>
                   {isAdmin && editId === cat.id ? (
                     <div className="cat-chip-edit">
                       <input
@@ -128,12 +138,26 @@ export function CategoryList({ role }: Props) {
                         maxLength={MAX_NAME_LENGTH}
                         onChange={(e) => setEditName(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter")  handleEditSave(cat);
+                          if (e.key === "Enter") handleEditSave(cat);
                           if (e.key === "Escape") setEditId(null);
                         }}
                       />
-                      <button className="chip-action-btn" aria-label="Сачувај" disabled={busy} onClick={() => handleEditSave(cat)}>✓</button>
-                      <button className="chip-action-btn" aria-label="Откажи" disabled={busy} onClick={() => setEditId(null)}>✕</button>
+                      <button
+                        className="chip-action-btn"
+                        aria-label="Сачувај"
+                        disabled={busy}
+                        onClick={() => handleEditSave(cat)}
+                      >
+                        ✓
+                      </button>
+                      <button
+                        className="chip-action-btn"
+                        aria-label="Откажи"
+                        disabled={busy}
+                        onClick={() => setEditId(null)}
+                      >
+                        ✕
+                      </button>
                     </div>
                   ) : (
                     <div className="cat-chip-view">
@@ -147,7 +171,9 @@ export function CategoryList({ role }: Props) {
                             aria-label="Поново активирај"
                             disabled={busy}
                             onClick={() => handleReactivate(cat)}
-                          >↺</button>
+                          >
+                            ↺
+                          </button>
                         </div>
                       )}
                       {isAdmin && !cat.system && cat.active && (
@@ -156,14 +182,21 @@ export function CategoryList({ role }: Props) {
                             className="chip-action-btn"
                             title="Уреди"
                             aria-label="Уреди"
-                            onClick={() => { setEditId(cat.id); setEditName(cat.name); }}
-                          >✎</button>
+                            onClick={() => {
+                              setEditId(cat.id);
+                              setEditName(cat.name);
+                            }}
+                          >
+                            ✎
+                          </button>
                           <button
                             className="chip-action-btn danger"
                             title="Деактивирај"
                             aria-label="Деактивирај"
                             onClick={() => setPendingDeactivate(cat)}
-                          >✕</button>
+                          >
+                            ✕
+                          </button>
                         </div>
                       )}
                     </div>
@@ -199,18 +232,25 @@ export function CategoryList({ role }: Props) {
                 ))}
               </div>
               <div className="form-field">
-                <label className="field-label" htmlFor={`${uid}-1`}>Назив категорије</label>
-                <input id={`${uid}-1`}
+                <label className="field-label" htmlFor={`${uid}-1`}>
+                  Назив категорије
+                </label>
+                <input
+                  id={`${uid}-1`}
                   placeholder="Нпр. Закупнина"
                   value={newName}
                   maxLength={MAX_NAME_LENGTH}
                   onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCreate();
+                  }}
                 />
               </div>
               {formError && <p className="error-text">{formError}</p>}
               <div className="form-actions">
-                <button className="primary" disabled={busy} onClick={handleCreate}>Додај</button>
+                <button className="primary" disabled={busy} onClick={handleCreate}>
+                  Додај
+                </button>
               </div>
             </div>
           )}
@@ -225,7 +265,6 @@ export function CategoryList({ role }: Props) {
         onConfirm={confirmDeactivate}
         onCancel={() => setPendingDeactivate(null)}
       />
-
     </div>
   );
 }

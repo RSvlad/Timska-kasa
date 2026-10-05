@@ -12,7 +12,7 @@ export interface Subscribed<T> {
 
 export type SubscribeFn<T> = (
   onData: (items: T[]) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
 ) => () => void;
 
 export function useSubscription<T>(subscribe: SubscribeFn<T>): Subscribed<T> {
@@ -25,7 +25,7 @@ export function useSubscription<T>(subscribe: SubscribeFn<T>): Subscribed<T> {
   useEffect(() => {
     return subscribe(
       (data) => setState({ data, loading: false, error: null }),
-      (error) => setState((s) => ({ ...s, loading: false, error }))
+      (error) => setState((s) => ({ ...s, loading: false, error })),
     );
   }, [subscribe]);
 

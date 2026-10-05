@@ -1,4 +1,3 @@
-
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { AuthProvider } from "@identity/application/AuthContext";
@@ -13,5 +12,5 @@ createRoot(document.getElementById("root")!).render(
         <App />
       </AuthProvider>
     </ErrorBoundary>
-  </StrictMode>
+  </StrictMode>,
 );

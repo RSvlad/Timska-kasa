@@ -1,0 +1,2 @@
+export PATH="/c/Program Files/Git/usr/bin:/c/Program Files/Git/bin:$PATH"
+npx lint-staged

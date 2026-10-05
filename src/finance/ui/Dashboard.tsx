@@ -12,10 +12,10 @@ import { formatAmount, toMinor, fromMinor } from "@finance/domain/Amount";
 type PeriodPreset = "данас" | "овај месец" | "ова година" | "све";
 
 const PERIODS: { id: PeriodPreset; label: string }[] = [
-  { id: "данас",      label: "Данас" },
+  { id: "данас", label: "Данас" },
   { id: "овај месец", label: "Месец" },
   { id: "ова година", label: "Година" },
-  { id: "све",        label: "Све" },
+  { id: "све", label: "Све" },
 ];
 
 function periodBounds(preset: PeriodPreset): { from: Date; to: Date } | null {
@@ -28,12 +28,12 @@ function periodBounds(preset: PeriodPreset): { from: Date; to: Date } | null {
   if (preset === "овај месец") {
     return {
       from: new Date(now.getFullYear(), now.getMonth(), 1),
-      to:   new Date(now.getFullYear(), now.getMonth() + 1, 1),
+      to: new Date(now.getFullYear(), now.getMonth() + 1, 1),
     };
   }
   return {
     from: new Date(now.getFullYear(), 0, 1),
-    to:   new Date(now.getFullYear() + 1, 0, 1),
+    to: new Date(now.getFullYear() + 1, 0, 1),
   };
 }
 
@@ -43,7 +43,7 @@ function fmtCompact(value: number): string {
   const abs = Math.abs(value);
   const opts = { maximumFractionDigits: 2 };
   if (abs >= 1_000_000) return (value / 1_000_000).toLocaleString("sr-RS", opts) + "М";
-  if (abs >= 1_000)     return (value / 1_000).toLocaleString("sr-RS", opts) + "К";
+  if (abs >= 1_000) return (value / 1_000).toLocaleString("sr-RS", opts) + "К";
   return value.toLocaleString("sr-RS");
 }
 
@@ -54,7 +54,7 @@ function aggregate(records: FinanceRecord[]): Record<string, { income: number; e
     const cur = r.amount.currency;
     if (!minor[cur]) minor[cur] = { income: 0, expense: 0 };
     if (r.type === "Приход") minor[cur].income += toMinor(r.amount.value);
-    else                     minor[cur].expense += toMinor(r.amount.value);
+    else minor[cur].expense += toMinor(r.amount.value);
   }
   const map: Record<string, { income: number; expense: number }> = {};
   for (const cur of Object.keys(minor)) {
@@ -66,18 +66,24 @@ function aggregate(records: FinanceRecord[]): Record<string, { income: number; e
 // ── Подкомпоненте ──────────────────────────────────────────────────────────
 
 function WalletCard({
-  currency, income, expense, funds,
+  currency,
+  income,
+  expense,
+  funds,
 }: {
-  currency: string; income: number; expense: number; funds: Fund[];
+  currency: string;
+  income: number;
+  expense: number;
+  funds: Fund[];
 }) {
-  const balance  = fromMinor(toMinor(income) - toMinor(expense));
+  const balance = fromMinor(toMinor(income) - toMinor(expense));
   const positive = balance >= 0;
 
   // алоцирано у овој валути
   const totalReserved = fromMinor(
     funds
       .filter((f) => f.capacity.currency === currency)
-      .reduce((sum, f) => sum + toMinor(f.reserved), 0)
+      .reduce((sum, f) => sum + toMinor(f.reserved), 0),
   );
   const free = fromMinor(toMinor(balance) - toMinor(totalReserved));
   const hasReservations = totalReserved > 0;
@@ -85,9 +91,7 @@ function WalletCard({
   return (
     <div className="wallet-card">
       <p className="wallet-currency">{currency}</p>
-      <p className={`wallet-balance ${positive ? "pos" : "neg"}`}>
-        {fmt(balance, currency)}
-      </p>
+      <p className={`wallet-balance ${positive ? "pos" : "neg"}`}>{fmt(balance, currency)}</p>
 
       {hasReservations && (
         <div className="wallet-reserved-row">
@@ -122,15 +126,16 @@ function WalletCard({
       </div>
 
       {/* ratio bar */}
-      {income + expense > 0 && (() => {
-        const pct = Math.round((income / (income + expense)) * 100);
-        return (
-          <div className="ratio-bar">
-            <div className="ratio-fill income-fill"  style={{ width: `${pct}%` }} />
-            <div className="ratio-fill expense-fill" style={{ width: `${100 - pct}%` }} />
-          </div>
-        );
-      })()}
+      {income + expense > 0 &&
+        (() => {
+          const pct = Math.round((income / (income + expense)) * 100);
+          return (
+            <div className="ratio-bar">
+              <div className="ratio-fill income-fill" style={{ width: `${pct}%` }} />
+              <div className="ratio-fill expense-fill" style={{ width: `${100 - pct}%` }} />
+            </div>
+          );
+        })()}
     </div>
   );
 }
@@ -151,9 +156,12 @@ function RecentItem({ record, categoryName }: { record: FinanceRecord; categoryN
       </div>
       <div className="recent-right">
         <span className={`recent-amount ${isIncome ? "income-val" : "expense-val"}`}>
-          {isIncome ? "+" : "−"}{fmtCompact(record.amount.value)} {record.amount.currency}
+          {isIncome ? "+" : "−"}
+          {fmtCompact(record.amount.value)} {record.amount.currency}
         </span>
-        <span className="recent-time">{dateStr} {timeStr}</span>
+        <span className="recent-time">
+          {dateStr} {timeStr}
+        </span>
       </div>
     </div>
   );
@@ -162,14 +170,18 @@ function RecentItem({ record, categoryName }: { record: FinanceRecord; categoryN
 // ── Главна компонента ──────────────────────────────────────────────────────
 
 export function Dashboard() {
-  const { data: records,    loading: recordsLoading,    error: recordsError }    = useRecordList();
-  const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoryList();
-  const { data: funds,      loading: fundsLoading,      error: fundsError }      = useFundList();
+  const { data: records, loading: recordsLoading, error: recordsError } = useRecordList();
+  const {
+    data: categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useCategoryList();
+  const { data: funds, loading: fundsLoading, error: fundsError } = useFundList();
   const loading = recordsLoading || categoriesLoading || fundsLoading;
   const loadError = recordsError ?? categoriesError ?? fundsError;
 
-  const [period,         setPeriod]         = useState<PeriodPreset>("овај месец");
-  const [typeFilter,     setTypeFilter]     = useState<RecordType | "Сви">("Сви");
+  const [period, setPeriod] = useState<PeriodPreset>("овај месец");
+  const [typeFilter, setTypeFilter] = useState<RecordType | "Сви">("Сви");
   const [categoryFilter, setCategoryFilter] = useState<string>("све");
 
   // Кумулативни салдо — сви записи, игнорише све филтере
@@ -189,7 +201,7 @@ export function Dashboard() {
 
   const recent = useMemo(
     () => [...filtered].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime()).slice(0, 10),
-    [filtered]
+    [filtered],
   );
 
   function catName(id: string): string {
@@ -200,7 +212,6 @@ export function Dashboard() {
 
   return (
     <div className="db-root">
-
       {/* ── Новчаник картице (кумулативно) ── */}
       {loadError ? (
         <div className="empty-state" role="alert">
@@ -246,7 +257,10 @@ export function Dashboard() {
           <div className="filter-body">
             <label className="filter-label">
               Тип
-              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as RecordType | "Сви")}>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as RecordType | "Сви")}
+              >
                 <option value="Сви">Сви</option>
                 <option value="Приход">Приход</option>
                 <option value="Расход">Расход</option>
@@ -257,7 +271,9 @@ export function Dashboard() {
               <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                 <option value="све">Све</option>
                 {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.type})</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.type})
+                  </option>
                 ))}
               </select>
             </label>
@@ -274,7 +290,6 @@ export function Dashboard() {
           </div>
         )}
       </div>
-
     </div>
   );
 }

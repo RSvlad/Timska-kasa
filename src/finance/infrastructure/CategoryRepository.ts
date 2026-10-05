@@ -1,13 +1,7 @@
 // Infrastructure: Repository за Entity Категорија (Firestore колекција `categories`)
 // Видети ADR-010 (CRUD, меко брисање, заштита системске категорије).
 
-import {
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  onSnapshot,
-} from "firebase/firestore";
+import { collection, doc, addDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@shared/infrastructure/firebase";
 import type { Category } from "@finance/domain/Category";
 
@@ -26,18 +20,16 @@ type CategoryPatch = Partial<Omit<Category, "id" | "type" | "system">>;
  */
 export function subscribe(
   callback: (categories: Category[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   const ref = collection(db, COLLECTION);
   return onSnapshot(
     ref,
     (snapshot) => {
-      const categories = snapshot.docs.map(
-        (d) => ({ id: d.id, ...d.data() } as Category)
-      );
+      const categories = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Category);
       callback(categories);
     },
-    (error) => onError?.(error)
+    (error) => onError?.(error),
   );
 }
 

@@ -42,7 +42,7 @@ export function useReceiptUpload(): UseReceiptUpload {
       setError(
         e instanceof ReceiptValidationError
           ? e.message
-          : "Слика није отпремљена. Покушајте поново."
+          : "Слика није отпремљена. Покушајте поново.",
       );
       throw e;
     } finally {

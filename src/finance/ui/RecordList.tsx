@@ -27,9 +27,7 @@ function ReceiptThumb({ source }: { source: string }) {
   const url = useReceiptUrl(source);
   const [failed, setFailed] = useState(false);
   if (failed || !url) return <span>🧾 Отвори рачун</span>;
-  return (
-    <img src={url} alt="Рачун" className="receipt-thumb" onError={() => setFailed(true)} />
-  );
+  return <img src={url} alt="Рачун" className="receipt-thumb" onError={() => setFailed(true)} />;
 }
 
 // Форматира Date у локално "YYYY-MM-DDTHH:mm" (формат за datetime-local).
@@ -53,15 +51,15 @@ function emptyForm() {
 
 export function RecordList({ role, currentUserId }: Props) {
   const uid = useId();
-  const { data: records }    = useRecordList();
+  const { data: records } = useRecordList();
   const { data: categories } = useCategoryList();
-  const { data: funds }      = useFundList();
-  const isAdmin    = role === "Admin";
+  const { data: funds } = useFundList();
+  const isAdmin = role === "Admin";
 
-  const [form,      setForm]      = useState(emptyForm);
-  const [editId,    setEditId]    = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [editId, setEditId] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
-  const [open,      setOpen]      = useState(false);
+  const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [receiptError, setReceiptError] = useState("");
 
@@ -69,12 +67,12 @@ export function RecordList({ role, currentUserId }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const receiptUpload = useReceiptUpload();
 
-  const activeCategories   = categories.filter((c) => c.active);
+  const activeCategories = categories.filter((c) => c.active);
   const filteredCategories = activeCategories.filter((c) => c.type === form.type);
 
   // Фондови који имају исту валуту као унети износ
   const compatibleFunds = funds.filter(
-    (f) => f.capacity.currency === normalizeCurrency(form.currency)
+    (f) => f.capacity.currency === normalizeCurrency(form.currency),
   );
 
   function categoryName(id: string): string {
@@ -90,8 +88,9 @@ export function RecordList({ role, currentUserId }: Props) {
   function validate(): string {
     if (parseAmountInput(form.value) === null)
       return "Износ мора бити позитиван број (највише 2 децимале).";
-    if (!isValidCurrency(form.currency)) return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
-    if (!form.categoryId)          return "Категорија је обавезна.";
+    if (!isValidCurrency(form.currency))
+      return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
+    if (!form.categoryId) return "Категорија је обавезна.";
     if (!form.counterparty.trim()) return "Контрагент је обавезан.";
     return "";
   }
@@ -99,18 +98,24 @@ export function RecordList({ role, currentUserId }: Props) {
   async function handleSubmit() {
     if (submitting) return;
     const err = validate();
-    if (err) { setFormError(err); return; }
+    if (err) {
+      setFormError(err);
+      return;
+    }
     setFormError("");
 
     const payload = {
-      type:         form.type,
-      amount:       { value: parseAmountInput(form.value) as number, currency: normalizeCurrency(form.currency) },
-      dateTime:     new Date(form.dateTime),
-      categoryId:   form.categoryId,
+      type: form.type,
+      amount: {
+        value: parseAmountInput(form.value) as number,
+        currency: normalizeCurrency(form.currency),
+      },
+      dateTime: new Date(form.dateTime),
+      categoryId: form.categoryId,
       counterparty: form.counterparty.trim(),
-      description:  form.description.trim() || undefined,
-      authorId:     currentUserId,
-      fundId:       form.fundId || undefined,
+      description: form.description.trim() || undefined,
+      authorId: currentUserId,
+      fundId: form.fundId || undefined,
     };
 
     setSubmitting(true);
@@ -123,7 +128,7 @@ export function RecordList({ role, currentUserId }: Props) {
         setFormError(
           e instanceof FundChargeError
             ? e.message
-            : "Запис није сачуван. Провери везу и покушај поново."
+            : "Запис није сачуван. Провери везу и покушај поново.",
         );
         return;
       }
@@ -137,7 +142,9 @@ export function RecordList({ role, currentUserId }: Props) {
           await receiptUpload.attachReceipt(recordId, pendingReceipt, hadPrevious);
         } catch {
           setEditId(recordId);
-          setFormError("Запис је сачуван, али рачун није отпремљен. Покушај поново да сачуваш измене.");
+          setFormError(
+            "Запис је сачуван, али рачун није отпремљен. Покушај поново да сачуваш измене.",
+          );
           return;
         }
       }
@@ -168,14 +175,14 @@ export function RecordList({ role, currentUserId }: Props) {
   function startEdit(r: FinanceRecord) {
     setEditId(r.id);
     setForm({
-      type:         r.type,
-      value:        String(r.amount.value),
-      currency:     r.amount.currency,
-      dateTime:     toLocalInput(r.dateTime),
-      categoryId:   r.categoryId,
+      type: r.type,
+      value: String(r.amount.value),
+      currency: r.amount.currency,
+      dateTime: toLocalInput(r.dateTime),
+      categoryId: r.categoryId,
       counterparty: r.counterparty,
-      description:  r.description ?? "",
-      fundId:       r.fundId ?? "",
+      description: r.description ?? "",
+      fundId: r.fundId ?? "",
     });
     setPendingReceipt(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -211,14 +218,16 @@ export function RecordList({ role, currentUserId }: Props) {
 
   return (
     <div className="rl-root">
-
       {/* ── Форма (само Admin) ── */}
       {isAdmin && (
         <div className="card">
           <button
             className={`form-toggle ${open ? "open" : ""}`}
             onClick={() => {
-              if (open) { cancelEdit(); return; }
+              if (open) {
+                cancelEdit();
+                return;
+              }
               setForm(emptyForm());
               setOpen(true);
             }}
@@ -228,14 +237,20 @@ export function RecordList({ role, currentUserId }: Props) {
 
           {open && (
             <div className="record-form">
-
               {/* Ред 1: тип */}
               <div className="form-type-row">
                 {(["Приход", "Расход"] as RecordType[]).map((t) => (
                   <button
                     key={t}
                     className={`type-btn ${form.type === t ? (t === "Приход" ? "income-active" : "expense-active") : ""}`}
-                    onClick={() => setForm({ ...form, type: t, categoryId: "", fundId: t === "Расход" ? form.fundId : "" })}
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        type: t,
+                        categoryId: "",
+                        fundId: t === "Расход" ? form.fundId : "",
+                      })
+                    }
                   >
                     {t === "Приход" ? "↑ Приход" : "↓ Расход"}
                   </button>
@@ -245,8 +260,11 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Ред 2: износ + валута */}
               <div className="form-row">
                 <div className="form-field form-field--grow">
-                  <label className="field-label" htmlFor={`${uid}-1`}>Износ</label>
-                  <input id={`${uid}-1`}
+                  <label className="field-label" htmlFor={`${uid}-1`}>
+                    Износ
+                  </label>
+                  <input
+                    id={`${uid}-1`}
                     inputMode="decimal"
                     placeholder="0.00"
                     value={form.value}
@@ -254,15 +272,19 @@ export function RecordList({ role, currentUserId }: Props) {
                   />
                 </div>
                 <div className="form-field form-field--currency">
-                  <label className="field-label" htmlFor={`${uid}-2`}>Валута</label>
-                  <input id={`${uid}-2`}
+                  <label className="field-label" htmlFor={`${uid}-2`}>
+                    Валута
+                  </label>
+                  <input
+                    id={`${uid}-2`}
                     placeholder="RSD"
                     maxLength={3}
                     value={form.currency}
                     onChange={(e) => {
                       const currency = e.target.value;
                       const fund = funds.find((f) => f.id === form.fundId);
-                      const keepFund = fund && fund.capacity.currency === normalizeCurrency(currency);
+                      const keepFund =
+                        fund && fund.capacity.currency === normalizeCurrency(currency);
                       setForm({ ...form, currency, fundId: keepFund ? form.fundId : "" });
                     }}
                   />
@@ -271,22 +293,30 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Ред 3: категорија */}
               <div className="form-field">
-                <label className="field-label" htmlFor={`${uid}-3`}>Категорија</label>
-                <select id={`${uid}-3`}
+                <label className="field-label" htmlFor={`${uid}-3`}>
+                  Категорија
+                </label>
+                <select
+                  id={`${uid}-3`}
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                 >
                   <option value="">— Одабери —</option>
                   {filteredCategories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Ред 4а: датум */}
               <div className="form-field">
-                <label className="field-label" htmlFor={`${uid}-4`}>Датум и време</label>
-                <input id={`${uid}-4`}
+                <label className="field-label" htmlFor={`${uid}-4`}>
+                  Датум и време
+                </label>
+                <input
+                  id={`${uid}-4`}
                   type="datetime-local"
                   value={form.dateTime}
                   onChange={(e) => setForm({ ...form, dateTime: e.target.value })}
@@ -295,8 +325,11 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Ред 5: контрагент */}
               <div className="form-field">
-                <label className="field-label" htmlFor={`${uid}-5`}>Контрагент</label>
-                <input id={`${uid}-5`}
+                <label className="field-label" htmlFor={`${uid}-5`}>
+                  Контрагент
+                </label>
+                <input
+                  id={`${uid}-5`}
                   placeholder="Нпр. Прометеј д.о.о."
                   value={form.counterparty}
                   onChange={(e) => setForm({ ...form, counterparty: e.target.value })}
@@ -309,14 +342,16 @@ export function RecordList({ role, currentUserId }: Props) {
                   <label className="field-label" htmlFor={`${uid}-6`}>
                     Фонд <span className="field-optional">(опционо — терети фонд уместо касе)</span>
                   </label>
-                  <select id={`${uid}-6`}
+                  <select
+                    id={`${uid}-6`}
                     value={form.fundId}
                     onChange={(e) => setForm({ ...form, fundId: e.target.value })}
                   >
                     <option value="">— Тимска каса —</option>
                     {compatibleFunds.map((f) => (
                       <option key={f.id} value={f.id}>
-                        {f.name} ({f.reserved.toLocaleString("sr-RS")} / {f.capacity.value.toLocaleString("sr-RS")} {f.capacity.currency})
+                        {f.name} ({f.reserved.toLocaleString("sr-RS")} /{" "}
+                        {f.capacity.value.toLocaleString("sr-RS")} {f.capacity.currency})
                       </option>
                     ))}
                   </select>
@@ -325,8 +360,11 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Ред 6: опис */}
               <div className="form-field">
-                <label className="field-label" htmlFor={`${uid}-7`}>Опис <span className="field-optional">(опционо)</span></label>
-                <input id={`${uid}-7`}
+                <label className="field-label" htmlFor={`${uid}-7`}>
+                  Опис <span className="field-optional">(опционо)</span>
+                </label>
+                <input
+                  id={`${uid}-7`}
                   placeholder=""
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -335,27 +373,31 @@ export function RecordList({ role, currentUserId }: Props) {
 
               {/* Рачун — опциона слика */}
               <div className="form-field">
-                <label className="field-label">Рачун <span className="field-optional">(опционо)</span></label>
+                <label className="field-label">
+                  Рачун <span className="field-optional">(опционо)</span>
+                </label>
 
-                {editId && !pendingReceipt && (() => {
-                  const existing = records.find((r) => r.id === editId);
-                  const existingSource = existing ? receiptSource(existing) : undefined;
-                  return existingSource ? (
-                    <div className="receipt-preview">
-                      <a href="#" onClick={(e) => handleOpenReceipt(e, existingSource)}>
-                        <ReceiptThumb source={existingSource} />
-                      </a>
-                      <button
-                        type="button"
-                        className="ghost"
-                        disabled={receiptUpload.uploading}
-                        onClick={handleRemoveExistingReceipt}
-                      >
-                        Уклони рачун
-                      </button>
-                    </div>
-                  ) : null;
-                })()}
+                {editId &&
+                  !pendingReceipt &&
+                  (() => {
+                    const existing = records.find((r) => r.id === editId);
+                    const existingSource = existing ? receiptSource(existing) : undefined;
+                    return existingSource ? (
+                      <div className="receipt-preview">
+                        <a href="#" onClick={(e) => handleOpenReceipt(e, existingSource)}>
+                          <ReceiptThumb source={existingSource} />
+                        </a>
+                        <button
+                          type="button"
+                          className="ghost"
+                          disabled={receiptUpload.uploading}
+                          onClick={handleRemoveExistingReceipt}
+                        >
+                          Уклони рачун
+                        </button>
+                      </div>
+                    ) : null;
+                  })()}
 
                 <input
                   ref={fileInputRef}
@@ -373,12 +415,8 @@ export function RecordList({ role, currentUserId }: Props) {
                 {pendingReceipt && (
                   <p className="receipt-pending">Одабрано: {pendingReceipt.name}</p>
                 )}
-                {receiptUpload.uploading && (
-                  <p className="receipt-pending">Отпремање рачуна…</p>
-                )}
-                {receiptUpload.error && (
-                  <p className="error-text">{receiptUpload.error}</p>
-                )}
+                {receiptUpload.uploading && <p className="receipt-pending">Отпремање рачуна…</p>}
+                {receiptUpload.error && <p className="error-text">{receiptUpload.error}</p>}
               </div>
 
               {formError && <p className="error-text">{formError}</p>}
@@ -388,7 +426,9 @@ export function RecordList({ role, currentUserId }: Props) {
                   {editId ? "Сачувај измене" : "Додај запис"}
                 </button>
                 {editId && (
-                  <button className="ghost" disabled={submitting} onClick={cancelEdit}>Откажи</button>
+                  <button className="ghost" disabled={submitting} onClick={cancelEdit}>
+                    Откажи
+                  </button>
                 )}
               </div>
             </div>
@@ -415,22 +455,34 @@ export function RecordList({ role, currentUserId }: Props) {
                     <span className="recent-counterparty">{r.counterparty}</span>
                     <span className="recent-cat">
                       {categoryName(r.categoryId)}
-                      {r.fundId && <> · <span style={{ color: "var(--accent)" }}>📁 {fundName(r.fundId)}</span></>}
+                      {r.fundId && (
+                        <>
+                          {" "}
+                          · <span style={{ color: "var(--accent)" }}>📁 {fundName(r.fundId)}</span>
+                        </>
+                      )}
                       {receiptSource(r) && (
-                        <> · <a href="#" onClick={(e) => handleOpenReceipt(e, receiptSource(r)!)}>🧾 рачун</a></>
+                        <>
+                          {" "}
+                          ·{" "}
+                          <a href="#" onClick={(e) => handleOpenReceipt(e, receiptSource(r)!)}>
+                            🧾 рачун
+                          </a>
+                        </>
                       )}
                       {r.description && <> · {r.description}</>}
                     </span>
-                    <span className="recent-time">
-                      {r.dateTime.toLocaleString("sr-RS")}
-                    </span>
+                    <span className="recent-time">{r.dateTime.toLocaleString("sr-RS")}</span>
                   </div>
                   <div className="record-right">
                     <span className={`recent-amount ${isIncome ? "income-val" : "expense-val"}`}>
-                      {isIncome ? "+" : "−"}{r.amount.value.toLocaleString("sr-RS")} {r.amount.currency}
+                      {isIncome ? "+" : "−"}
+                      {r.amount.value.toLocaleString("sr-RS")} {r.amount.currency}
                     </span>
                     {isAdmin && (
-                      <button className="ghost edit-btn" onClick={() => startEdit(r)}>Уреди</button>
+                      <button className="ghost edit-btn" onClick={() => startEdit(r)}>
+                        Уреди
+                      </button>
                     )}
                   </div>
                 </div>
@@ -439,7 +491,6 @@ export function RecordList({ role, currentUserId }: Props) {
           </div>
         )}
       </div>
-
     </div>
   );
 }

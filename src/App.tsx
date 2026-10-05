@@ -9,16 +9,16 @@ import { FinanceDataProvider } from "@finance/application/FinanceDataProvider";
 type View = "dashboard" | "records" | "funds" | "categories";
 
 const NAV_ITEMS: { id: View; label: string; icon: string }[] = [
-  { id: "dashboard",  label: "Стање",      icon: "◈" },
-  { id: "records",    label: "Записи",     icon: "≡" },
-  { id: "funds",      label: "Фондови",    icon: "🗂" },
+  { id: "dashboard", label: "Стање", icon: "◈" },
+  { id: "records", label: "Записи", icon: "≡" },
+  { id: "funds", label: "Фондови", icon: "🗂" },
   { id: "categories", label: "Категорије", icon: "⊞" },
 ];
 
 const VIEW_TITLES: Record<View, string> = {
-  dashboard:  "Стање",
-  records:    "Записи",
-  funds:      "Фондови",
+  dashboard: "Стање",
+  records: "Записи",
+  funds: "Фондови",
   categories: "Категорије",
 };
 
@@ -67,41 +67,46 @@ export default function App() {
 
   return (
     <FinanceDataProvider>
-    <div className="app-shell">
+      <div className="app-shell">
+        {/* ── Top bar ── */}
+        <header className="top-bar">
+          <span className="top-bar-logo">💰</span>
+          <span className="top-bar-title">{VIEW_TITLES[view]}</span>
+          <div className="top-bar-right">
+            <span className="role-badge">{user.role}</span>
+            <button
+              className="ghost icon-btn"
+              title="Одјава"
+              aria-label="Одјава"
+              onClick={signOutUser}
+            >
+              ⏏
+            </button>
+          </div>
+        </header>
 
-      {/* ── Top bar ── */}
-      <header className="top-bar">
-        <span className="top-bar-logo">💰</span>
-        <span className="top-bar-title">{VIEW_TITLES[view]}</span>
-        <div className="top-bar-right">
-          <span className="role-badge">{user.role}</span>
-          <button className="ghost icon-btn" title="Одјава" aria-label="Одјава" onClick={signOutUser}>⏏</button>
-        </div>
-      </header>
+        {/* ── Content ── */}
+        <main className="app-main">
+          {view === "dashboard" && <Dashboard />}
+          {view === "records" && <RecordList role={user.role} currentUserId={user.id} />}
+          {view === "funds" && <FundsPage role={user.role} />}
+          {view === "categories" && <CategoryList role={user.role} />}
+        </main>
 
-      {/* ── Content ── */}
-      <main className="app-main">
-        {view === "dashboard"  && <Dashboard />}
-        {view === "records"    && <RecordList role={user.role} currentUserId={user.id} />}
-        {view === "funds"      && <FundsPage role={user.role} />}
-        {view === "categories" && <CategoryList role={user.role} />}
-      </main>
-
-      {/* ── Bottom nav ── */}
-      <nav className="bottom-nav">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            className={`bottom-nav-item ${view === item.id ? "active" : ""}`}
-            onClick={() => setView(item.id)}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-label">{item.label}</span>
-          </button>
-        ))}
-      </nav>
-
-    </div>
+        {/* ── Bottom nav ── */}
+        <nav className="bottom-nav">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              className={`bottom-nav-item ${view === item.id ? "active" : ""}`}
+              onClick={() => setView(item.id)}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
     </FinanceDataProvider>
   );
 }

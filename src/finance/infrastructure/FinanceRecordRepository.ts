@@ -20,9 +20,7 @@ const FUNDS_COLLECTION = "funds";
 export type NewFinanceRecord = Omit<FinanceRecord, "id" | "createdAt">;
 
 // `authorId` и `createdAt` се не мењају после креирања (audit trail).
-type FinanceRecordPatch = Partial<
-  Omit<FinanceRecord, "id" | "authorId" | "createdAt">
->;
+type FinanceRecordPatch = Partial<Omit<FinanceRecord, "id" | "authorId" | "createdAt">>;
 
 interface FinanceRecordDoc extends Omit<FinanceRecord, "id" | "dateTime" | "createdAt"> {
   dateTime: Timestamp;
@@ -50,7 +48,7 @@ function fromDoc(id: string, data: Partial<FinanceRecordDoc>): FinanceRecord | n
  */
 export function subscribe(
   callback: (records: FinanceRecord[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   const ref = collection(db, COLLECTION);
   return onSnapshot(
@@ -61,7 +59,7 @@ export function subscribe(
         .filter((r): r is FinanceRecord => r !== null);
       callback(records);
     },
-    (error) => onError?.(error)
+    (error) => onError?.(error),
   );
 }
 
@@ -84,8 +82,7 @@ interface FundCharge {
 // Само Расход са fundId терети фонд (смањује `reserved`); Приход са fundId није дозвољен.
 function chargeOf(r: FundCharge): { fundId: string; value: number } | null {
   if (!r.fundId) return null;
-  if (r.type !== "Расход")
-    throw new FundChargeError("Фонд се може терети само расходом.");
+  if (r.type !== "Расход") throw new FundChargeError("Фонд се може терети само расходом.");
   return { fundId: r.fundId, value: r.amount.value };
 }
 
@@ -98,7 +95,7 @@ async function applyFundCharges(
   tx: Transaction,
   release: { fundId: string; value: number } | null,
   charge: { fundId: string; value: number } | null,
-  currency: string
+  currency: string,
 ): Promise<void> {
   const deltas = new Map<string, number>();
   if (release) deltas.set(release.fundId, (deltas.get(release.fundId) ?? 0) + release.value);
@@ -108,7 +105,7 @@ async function applyFundCharges(
     [...deltas.entries()].map(async ([fundId, delta]) => {
       const ref = doc(db, FUNDS_COLLECTION, fundId);
       return { ref, delta, isCharge: charge?.fundId === fundId, snap: await tx.get(ref) };
-    })
+    }),
   );
 
   for (const { ref, delta, isCharge, snap } of loaded) {
@@ -116,11 +113,13 @@ async function applyFundCharges(
     if (!snap.exists()) throw new FundChargeError("Фонд не постоји.");
     const f = snap.data() as { reserved: number; capacity: { value: number; currency: string } };
     if (isCharge && f.capacity.currency !== currency)
-      throw new FundChargeError(`Валута записа се не поклапа са валутом фонда (${f.capacity.currency}).`);
+      throw new FundChargeError(
+        `Валута записа се не поклапа са валутом фонда (${f.capacity.currency}).`,
+      );
     const next = round2(f.reserved + delta);
     if (next < 0)
       throw new FundChargeError(
-        `У фонду је алоцирано само ${f.reserved} ${f.capacity.currency}, а расход је већи.`
+        `У фонду је алоцирано само ${f.reserved} ${f.capacity.currency}, а расход је већи.`,
       );
     if (next > f.capacity.value)
       throw new FundChargeError("Враћање у фонд би премашило његов капацитет.");
@@ -148,14 +147,9 @@ export async function createFinanceRecord(record: NewFinanceRecord): Promise<str
  * `authorId` или `createdAt` — ове инваријанте чува repository.
  * Терећење фонда (`fundId`) се атомарно усклађује: старо се враћа, ново примењује.
  */
-export async function updateFinanceRecord(
-  id: string,
-  patch: FinanceRecordPatch
-): Promise<void> {
+export async function updateFinanceRecord(id: string, patch: FinanceRecordPatch): Promise<void> {
   if ("authorId" in patch || "createdAt" in patch) {
-    throw new Error(
-      "ФинансијскиЗапис: 'authorId' и 'createdAt' су immutable после креирања."
-    );
+    throw new Error("ФинансијскиЗапис: 'authorId' и 'createdAt' су immutable после креирања.");
   }
   const ref = doc(db, COLLECTION, id);
   const data: Record<string, unknown> = { ...patch };

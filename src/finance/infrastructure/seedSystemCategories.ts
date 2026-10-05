@@ -12,7 +12,7 @@ interface SystemCategoryDef {
 }
 
 const SYSTEM_CATEGORIES: SystemCategoryDef[] = [
-  { id: "system-unknown-income",  name: "Непознато", type: "Приход" },
+  { id: "system-unknown-income", name: "Непознато", type: "Приход" },
   { id: "system-unknown-expense", name: "Непознато", type: "Расход" },
 ];
 
@@ -27,6 +27,6 @@ export async function seedSystemCategories(): Promise<void> {
       const snap = await getDoc(ref);
       if (snap.exists()) return;
       await setDoc(ref, { name, type, active: true, system: true });
-    })
+    }),
   );
 }

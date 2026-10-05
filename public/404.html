@@ -8,9 +8,7 @@
       const hash = window.location.hash;
       const base = "/Finance-project";
       const rest = path.slice(base.length) || "/";
-      window.location.replace(
-        base + "/?redirect=" + encodeURIComponent(rest + search + hash)
-      );
+      window.location.replace(base + "/?redirect=" + encodeURIComponent(rest + search + hash));
     </script>
   </head>
   <body></body>

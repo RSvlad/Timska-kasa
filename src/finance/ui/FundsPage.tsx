@@ -15,7 +15,14 @@ import {
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
-import { formatAmount, isValidCurrency, normalizeCurrency, parseAmountInput, toMinor, fromMinor } from "@finance/domain/Amount";
+import {
+  formatAmount,
+  isValidCurrency,
+  normalizeCurrency,
+  parseAmountInput,
+  toMinor,
+  fromMinor,
+} from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
 
 interface Props {
@@ -28,16 +35,10 @@ const fmt = formatAmount;
 
 function ProgressBar({ pct }: { pct: number }) {
   const clamped = Math.min(100, Math.max(0, pct));
-  const color =
-    clamped >= 90 ? "var(--red)" :
-    clamped >= 60 ? "var(--accent)" :
-    "var(--green)";
+  const color = clamped >= 90 ? "var(--red)" : clamped >= 60 ? "var(--accent)" : "var(--green)";
   return (
     <div className="fund-bar-track">
-      <div
-        className="fund-bar-fill"
-        style={{ width: `${clamped}%`, background: color }}
-      />
+      <div className="fund-bar-fill" style={{ width: `${clamped}%`, background: color }} />
     </div>
   );
 }
@@ -53,10 +54,10 @@ interface FundCardProps {
 function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCardProps) {
   const uid = useId();
   const [deltaInput, setDeltaInput] = useState("");
-  const [mode, setMode]             = useState<"reserve" | "release" | null>(null);
-  const [err, setErr]               = useState("");
-  const [editing, setEditing]       = useState(false);
-  const [editForm, setEditForm]     = useState({
+  const [mode, setMode] = useState<"reserve" | "release" | null>(null);
+  const [err, setErr] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
     name: fund.name,
     description: fund.description ?? "",
     capacity: String(fund.capacity.value),
@@ -65,16 +66,15 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const pct = fund.capacity.value > 0
-    ? (fund.reserved / fund.capacity.value) * 100
-    : 0;
+  const pct = fund.capacity.value > 0 ? (fund.reserved / fund.capacity.value) * 100 : 0;
   const available = fromMinor(toMinor(fund.capacity.value) - toMinor(fund.reserved));
 
   async function handleTransfer() {
     if (busy) return;
     const delta = parseAmountInput(deltaInput);
     if (delta === null) {
-      setErr("Унеси позитиван износ (највише 2 децимале)."); return;
+      setErr("Унеси позитиван износ (највише 2 децимале).");
+      return;
     }
     setErr("");
     setBusy(true);
@@ -84,7 +84,8 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       } else {
         await releaseFromFund(fund, delta);
       }
-      setDeltaInput(""); setMode(null);
+      setDeltaInput("");
+      setMode(null);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Грешка.");
     } finally {
@@ -95,9 +96,18 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
   async function handleEdit() {
     if (busy) return;
     const cap = parseAmountInput(editForm.capacity);
-    if (!editForm.name.trim()) { setErr("Назив је обавезан."); return; }
-    if (cap === null) { setErr("Капацитет мора бити позитиван број (највише 2 децимале)."); return; }
-    if (!isValidCurrency(editForm.currency)) { setErr("Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR)."); return; }
+    if (!editForm.name.trim()) {
+      setErr("Назив је обавезан.");
+      return;
+    }
+    if (cap === null) {
+      setErr("Капацитет мора бити позитиван број (највише 2 децимале).");
+      return;
+    }
+    if (!isValidCurrency(editForm.currency)) {
+      setErr("Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).");
+      return;
+    }
     setErr("");
     setBusy(true);
     try {
@@ -132,27 +142,63 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       {editing ? (
         <div className="fund-edit-form">
           <div className="form-field">
-            <label className="field-label" htmlFor={`${uid}-1`}>Назив</label>
-            <input id={`${uid}-1`} value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+            <label className="field-label" htmlFor={`${uid}-1`}>
+              Назив
+            </label>
+            <input
+              id={`${uid}-1`}
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+            />
           </div>
           <div className="form-field">
-            <label className="field-label" htmlFor={`${uid}-2`}>Опис <span className="field-optional">(опционо)</span></label>
-            <input id={`${uid}-2`} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+            <label className="field-label" htmlFor={`${uid}-2`}>
+              Опис <span className="field-optional">(опционо)</span>
+            </label>
+            <input
+              id={`${uid}-2`}
+              value={editForm.description}
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+            />
           </div>
           <div className="form-row">
             <div className="form-field form-field--grow">
-              <label className="field-label" htmlFor={`${uid}-3`}>Капацитет</label>
-              <input id={`${uid}-3`} inputMode="decimal" value={editForm.capacity} onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value })} />
+              <label className="field-label" htmlFor={`${uid}-3`}>
+                Капацитет
+              </label>
+              <input
+                id={`${uid}-3`}
+                inputMode="decimal"
+                value={editForm.capacity}
+                onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value })}
+              />
             </div>
             <div className="form-field form-field--currency">
-              <label className="field-label" htmlFor={`${uid}-4`}>Валута</label>
-              <input id={`${uid}-4`} maxLength={3} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
+              <label className="field-label" htmlFor={`${uid}-4`}>
+                Валута
+              </label>
+              <input
+                id={`${uid}-4`}
+                maxLength={3}
+                value={editForm.currency}
+                onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })}
+              />
             </div>
           </div>
           {err && <p className="error-text">{err}</p>}
           <div className="form-actions">
-            <button className="primary" disabled={busy} onClick={handleEdit}>Сачувај</button>
-            <button className="ghost" onClick={() => { setEditing(false); setErr(""); }}>Откажи</button>
+            <button className="primary" disabled={busy} onClick={handleEdit}>
+              Сачувај
+            </button>
+            <button
+              className="ghost"
+              onClick={() => {
+                setEditing(false);
+                setErr("");
+              }}
+            >
+              Откажи
+            </button>
           </div>
         </div>
       ) : (
@@ -164,8 +210,21 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
             </div>
             {isAdmin && (
               <div className="fund-actions">
-                <button className="ghost chip-action-btn" onClick={() => { setEditing(true); setErr(""); }}>✎</button>
-                <button className="ghost chip-action-btn danger" onClick={() => setConfirmingDelete(true)}>✕</button>
+                <button
+                  className="ghost chip-action-btn"
+                  onClick={() => {
+                    setEditing(true);
+                    setErr("");
+                  }}
+                >
+                  ✎
+                </button>
+                <button
+                  className="ghost chip-action-btn danger"
+                  onClick={() => setConfirmingDelete(true)}
+                >
+                  ✕
+                </button>
               </div>
             )}
           </div>
@@ -177,11 +236,15 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
             </div>
             <div className="fund-amount-row">
               <span className="fund-amount-label">Капацитет</span>
-              <span className="fund-amount-val">{fmt(fund.capacity.value, fund.capacity.currency)}</span>
+              <span className="fund-amount-val">
+                {fmt(fund.capacity.value, fund.capacity.currency)}
+              </span>
             </div>
             <div className="fund-amount-row">
               <span className="fund-amount-label">Слободно у фонду</span>
-              <span className="fund-amount-val income-val">{fmt(available, fund.capacity.currency)}</span>
+              <span className="fund-amount-val income-val">
+                {fmt(available, fund.capacity.currency)}
+              </span>
             </div>
           </div>
 
@@ -195,14 +258,20 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                 <div className="fund-transfer-btns">
                   <button
                     className="ghost"
-                    onClick={() => { setMode("reserve"); setErr(""); }}
+                    onClick={() => {
+                      setMode("reserve");
+                      setErr("");
+                    }}
                     disabled={freeInCurrency <= 0 || available <= 0}
                   >
                     + Алоцирај
                   </button>
                   <button
                     className="ghost"
-                    onClick={() => { setMode("release"); setErr(""); }}
+                    onClick={() => {
+                      setMode("release");
+                      setErr("");
+                    }}
                     disabled={fund.reserved <= 0}
                   >
                     − Дезалоцирај
@@ -213,9 +282,12 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                   <div className="form-row">
                     <div className="form-field form-field--grow">
                       <label className="field-label" htmlFor={`${uid}-5`}>
-                        {mode === "reserve" ? `Алоцирај (слободно у тимској каси: ${freeInCurrency.toLocaleString("sr-RS")} ${fund.capacity.currency})` : "Дезалоцирај"}
+                        {mode === "reserve"
+                          ? `Алоцирај (слободно у тимској каси: ${freeInCurrency.toLocaleString("sr-RS")} ${fund.capacity.currency})`
+                          : "Дезалоцирај"}
                       </label>
-                      <input id={`${uid}-5`}
+                      <input
+                        id={`${uid}-5`}
                         inputMode="decimal"
                         placeholder="0.00"
                         value={deltaInput}
@@ -225,8 +297,19 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                   </div>
                   {err && <p className="error-text">{err}</p>}
                   <div className="form-actions">
-                    <button className="primary" disabled={busy} onClick={handleTransfer}>Потврди</button>
-                    <button className="ghost" onClick={() => { setMode(null); setDeltaInput(""); setErr(""); }}>Откажи</button>
+                    <button className="primary" disabled={busy} onClick={handleTransfer}>
+                      Потврди
+                    </button>
+                    <button
+                      className="ghost"
+                      onClick={() => {
+                        setMode(null);
+                        setDeltaInput("");
+                        setErr("");
+                      }}
+                    >
+                      Откажи
+                    </button>
                   </div>
                 </div>
               )}
@@ -251,36 +334,43 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
 export function FundsPage({ role }: Props) {
   const uid = useId();
-  const { data: funds }   = useFundList();
+  const { data: funds } = useFundList();
   const { data: records } = useRecordList();
   const isAdmin = role === "Admin";
 
-  const [form,      setForm]      = useState(EMPTY_FORM);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState("");
-  const [open,      setOpen]      = useState(false);
-  const [creating,  setCreating]  = useState(false);
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const freeBalance = freeBalanceByCurrency(records, funds);
 
   function validate(): string {
-    if (!form.name.trim())                                          return "Назив је обавезан.";
+    if (!form.name.trim()) return "Назив је обавезан.";
     if (parseAmountInput(form.capacity) === null)
-                                                                    return "Капацитет мора бити позитиван број (највише 2 децимале).";
-    if (!isValidCurrency(form.currency))                            return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
+      return "Капацитет мора бити позитиван број (највише 2 децимале).";
+    if (!isValidCurrency(form.currency))
+      return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
     return "";
   }
 
   async function handleCreate() {
     if (creating) return;
     const err = validate();
-    if (err) { setFormError(err); return; }
+    if (err) {
+      setFormError(err);
+      return;
+    }
     setFormError("");
     setCreating(true);
     try {
       await addFund({
         name: form.name.trim(),
         description: form.description.trim() || undefined,
-        capacity: { value: parseAmountInput(form.capacity) as number, currency: normalizeCurrency(form.currency) },
+        capacity: {
+          value: parseAmountInput(form.capacity) as number,
+          currency: normalizeCurrency(form.currency),
+        },
       });
       setForm(EMPTY_FORM);
       setOpen(false);
@@ -293,29 +383,40 @@ export function FundsPage({ role }: Props) {
 
   return (
     <div className="funds-root">
-
       {/* ── Форма за креирање (само Admin) ── */}
       {isAdmin && (
         <div className="card mb-16">
           <button
             className={`form-toggle ${open ? "open" : ""}`}
-            onClick={() => { setOpen((v) => !v); if (open) { setForm(EMPTY_FORM); setFormError(""); } }}
+            onClick={() => {
+              setOpen((v) => !v);
+              if (open) {
+                setForm(EMPTY_FORM);
+                setFormError("");
+              }
+            }}
           >
             <span>{open ? "✕  Затвори" : "+ Нови фонд"}</span>
           </button>
           {open && (
             <div>
               <div className="form-field">
-                <label className="field-label" htmlFor={`${uid}-6`}>Назив</label>
-                <input id={`${uid}-6`}
+                <label className="field-label" htmlFor={`${uid}-6`}>
+                  Назив
+                </label>
+                <input
+                  id={`${uid}-6`}
                   placeholder="Нпр. Путни трошкови"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </div>
               <div className="form-field">
-                <label className="field-label" htmlFor={`${uid}-7`}>Опис <span className="field-optional">(опционо)</span></label>
-                <input id={`${uid}-7`}
+                <label className="field-label" htmlFor={`${uid}-7`}>
+                  Опис <span className="field-optional">(опционо)</span>
+                </label>
+                <input
+                  id={`${uid}-7`}
                   placeholder=""
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -323,8 +424,11 @@ export function FundsPage({ role }: Props) {
               </div>
               <div className="form-row">
                 <div className="form-field form-field--grow">
-                  <label className="field-label" htmlFor={`${uid}-8`}>Капацитет</label>
-                  <input id={`${uid}-8`}
+                  <label className="field-label" htmlFor={`${uid}-8`}>
+                    Капацитет
+                  </label>
+                  <input
+                    id={`${uid}-8`}
                     inputMode="decimal"
                     placeholder="0.00"
                     value={form.capacity}
@@ -332,8 +436,11 @@ export function FundsPage({ role }: Props) {
                   />
                 </div>
                 <div className="form-field form-field--currency">
-                  <label className="field-label" htmlFor={`${uid}-9`}>Валута</label>
-                  <input id={`${uid}-9`}
+                  <label className="field-label" htmlFor={`${uid}-9`}>
+                    Валута
+                  </label>
+                  <input
+                    id={`${uid}-9`}
                     placeholder="RSD"
                     maxLength={3}
                     value={form.currency}
@@ -343,7 +450,9 @@ export function FundsPage({ role }: Props) {
               </div>
               {formError && <p className="error-text">{formError}</p>}
               <div className="form-actions">
-                <button className="primary" disabled={creating} onClick={handleCreate}>Креирај фонд</button>
+                <button className="primary" disabled={creating} onClick={handleCreate}>
+                  Креирај фонд
+                </button>
               </div>
             </div>
           )}
@@ -370,7 +479,6 @@ export function FundsPage({ role }: Props) {
           ))}
         </div>
       )}
-
     </div>
   );
 }
