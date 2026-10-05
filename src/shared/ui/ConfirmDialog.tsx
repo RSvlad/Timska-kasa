@@ -27,7 +27,9 @@ export function ConfirmDialog({
   const confirmRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCancelRef = useRef(onCancel);
-  onCancelRef.current = onCancel;
+  useEffect(() => {
+    onCancelRef.current = onCancel;
+  });
 
   // Зависи само од `open`: инлајн onCancel више не поново фокусира дугме при сваком рендеру.
   useEffect(() => {
