@@ -1,5 +1,5 @@
 import path from "node:path";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 const root = import.meta.dirname;
@@ -7,6 +7,9 @@ const root = import.meta.dirname;
 export default defineConfig({
   plugins: [react()],
   base: "/Timska-kasa/",
+  test: {
+    exclude: ["**/node_modules/**", "dist/**", "rules-tests/**"],
+  },
   resolve: {
     alias: {
       "@identity": path.resolve(root, "src/identity"),
