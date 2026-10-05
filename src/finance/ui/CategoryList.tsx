@@ -1,10 +1,7 @@
 // UI: Листа категорија — chip картице, accordion по типу (само Admin може мењати).
 
 import { useId, useState } from "react";
-import {
-  createCategory,
-  updateCategory,
-} from "@finance/infrastructure/CategoryRepository";
+import { addCategory, editCategory } from "@finance/application/categoryService";
 import { useCategoryList } from "@finance/application/useCategoryList";
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Category, RecordType } from "@finance/domain/Category";
@@ -72,7 +69,7 @@ export function CategoryList({ role }: Props) {
     if (error) { setFormError(error); return; }
     setFormError("");
     const ok = await run(async () => {
-      await createCategory({ name: trimmed, type: newType, active: true, system: false });
+      await addCategory({ name: trimmed, type: newType, active: true, system: false });
     });
     if (ok) {
       setNewName("");
@@ -83,12 +80,12 @@ export function CategoryList({ role }: Props) {
   async function confirmDeactivate() {
     if (!pendingDeactivate) return;
     const target = pendingDeactivate;
-    const ok = await run(() => updateCategory(target.id, { active: false }));
+    const ok = await run(() => editCategory(target.id, { active: false }));
     if (ok) setPendingDeactivate(null);
   }
 
   async function handleReactivate(cat: Category) {
-    await run(() => updateCategory(cat.id, { active: true }));
+    await run(() => editCategory(cat.id, { active: true }));
   }
 
   async function handleEditSave(cat: Category) {
@@ -96,7 +93,7 @@ export function CategoryList({ role }: Props) {
     const error = validateName(trimmed, cat.type, cat.id);
     if (error) { setActionError(error); return; }
     if (trimmed === cat.name) { setEditId(null); return; }
-    const ok = await run(() => updateCategory(cat.id, { name: trimmed }));
+    const ok = await run(() => editCategory(cat.id, { name: trimmed }));
     if (ok) setEditId(null);
   }
 

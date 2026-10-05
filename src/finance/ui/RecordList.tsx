@@ -2,10 +2,10 @@
 
 import { useId, useRef, useState } from "react";
 import {
-  createFinanceRecord,
-  updateFinanceRecord,
+  addRecord,
+  editRecord,
   type NewFinanceRecord,
-} from "@finance/infrastructure/FinanceRecordRepository";
+} from "@finance/application/recordService";
 import { useRecordList } from "@finance/application/useRecordList";
 import { useCategoryList } from "@finance/application/useCategoryList";
 import { useFundList } from "@finance/application/useFundList";
@@ -133,10 +133,10 @@ export function RecordList({ role, currentUserId }: Props) {
   async function saveRecord(payload: NewFinanceRecord): Promise<string> {
     if (editId) {
       const { authorId: _authorId, ...editable } = payload;
-      await updateFinanceRecord(editId, editable);
+      await editRecord(editId, editable);
       return editId;
     }
-    return createFinanceRecord(payload);
+    return addRecord(payload);
   }
 
   function resetForm() {
