@@ -19,5 +19,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
+      - run: npm test
       # `npm run build` = `tsc -b && vite build`; Firebase env није потребан за build.
       - run: npm run build
