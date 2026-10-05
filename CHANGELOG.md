@@ -12,7 +12,6 @@
 - `.editorconfig` и `.nvmrc`
 
 ### Промењено
-- CI: минималне дозволе, `timeout`, верзија Node-а из `.nvmrc`, upload build артефакта
 - `package.json`: метаподаци (опис, лиценца, repository, engines)
 - `.gitignore`: Firebase и OS артефакти
 
