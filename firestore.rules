@@ -22,6 +22,65 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email.lower())).data.role == "Admin";
     }
 
+    // Износ: { value: број, currency: ISO 4217 шифра од 3 велика слова }.
+    function validAmount(a, allowZero) {
+      return a is map
+        && a.keys().hasOnly(['value', 'currency'])
+        && a.value is number
+        && (allowZero ? a.value >= 0 : a.value > 0)
+        && a.value <= 1000000000000
+        && a.currency is string
+        && a.currency.matches('^[A-Z]{3}$');
+    }
+
+    function validRecord(d) {
+      return d.keys().hasOnly([
+          'type', 'amount', 'dateTime', 'categoryId', 'counterparty',
+          'description', 'authorId', 'createdAt', 'fundId', 'receiptUrl'
+        ])
+        && d.keys().hasAll([
+          'type', 'amount', 'dateTime', 'categoryId', 'counterparty',
+          'authorId', 'createdAt'
+        ])
+        && d.type in ["Приход", "Расход"]
+        && validAmount(d.amount, false)
+        && d.dateTime is timestamp
+        && d.createdAt is timestamp
+        && d.categoryId is string
+        && d.counterparty is string
+        && d.authorId is string
+        && (!('description' in d) || d.description is string)
+        && (!('fundId' in d) || d.fundId is string)
+        && (!('receiptUrl' in d) || d.receiptUrl is string);
+    }
+
+    function validFund(d) {
+      return d.keys().hasOnly(['name', 'description', 'capacity', 'reserved', 'createdAt'])
+        && d.keys().hasAll(['name', 'capacity', 'reserved', 'createdAt'])
+        && d.name is string
+        && (!('description' in d) || d.description is string)
+        && validAmount(d.capacity, true)
+        && d.reserved is number
+        && d.reserved >= 0
+        && d.reserved <= d.capacity.value
+        && d.createdAt is timestamp;
+    }
+
+    function isSeededSystemCategory(categoryId, d) {
+      return categoryId in ['system-unknown-income', 'system-unknown-expense']
+        && d.name == "Непознато"
+        && d.active == true;
+    }
+
+    function validCategory(d) {
+      return d.keys().hasOnly(['name', 'type', 'active', 'system'])
+        && d.keys().hasAll(['name', 'type', 'active', 'system'])
+        && d.name is string
+        && d.type in ["Приход", "Расход"]
+        && d.active is bool
+        && d.system is bool;
+    }
+
     match /allowedUsers/{email} {
       allow read: if isVerified() && request.auth.token.email.lower() == email;
       allow write: if false;
@@ -29,13 +88,22 @@ service cloud.firestore {
 
     match /categories/{categoryId} {
       allow read: if isAllowed();
-      allow create: if isAdmin();
+      // `system: true` је дозвољено само за две сеедоване системске категорије.
+      allow create: if isAdmin()
+        && validCategory(request.resource.data)
+        && (
+          request.resource.data.system == false
+          || isSeededSystemCategory(categoryId, request.resource.data)
+        );
+      // `type` и `system` су immutable; системској категорији се не мењају ни назив ни активност.
       allow update: if isAdmin()
+        && validCategory(request.resource.data)
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.system == resource.data.system
         && (
           !resource.data.system
           || (
             request.resource.data.name   == resource.data.name
-            && request.resource.data.type   == resource.data.type
             && request.resource.data.active == resource.data.active
           )
         );
@@ -44,15 +112,28 @@ service cloud.firestore {
 
     match /funds/{fundId} {
       allow read: if isAllowed();
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow create: if isAdmin()
+        && validFund(request.resource.data)
+        && request.resource.data.reserved == 0;
+      allow update: if isAdmin()
+        && validFund(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['name', 'description', 'capacity', 'reserved']);
+      // Фонд са алоцираним новцем се не брише; провера референцирања записа остаје на application слоју
+      // (правила не могу да упитују колекцију `transactions`).
+      allow delete: if isAdmin() && resource.data.reserved == 0;
     }
 
     match /transactions/{recordId} {
       allow read: if isAllowed();
-      allow create: if isAdmin();
-      allow update: if isAdmin();
+      allow create: if isAdmin()
+        && validRecord(request.resource.data)
+        && request.resource.data.authorId == request.auth.uid;
+      // authorId и createdAt су immutable (audit trail).
+      allow update: if isAdmin()
+        && validRecord(request.resource.data)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['authorId', 'createdAt']);
       allow delete: if false;
     }
 
