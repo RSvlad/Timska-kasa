@@ -1,6 +1,22 @@
+<div align="center">
+
 # 💰 Тимска каса
 
 **Најбоља бесплатна опција за вођење касе тима или организације.**
+
+[![CI](https://github.com/RSvlad/Timska-kasa/actions/workflows/ci.yml/badge.svg)](https://github.com/RSvlad/Timska-kasa/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/RSvlad/Timska-kasa)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/RSvlad/Timska-kasa)](https://github.com/RSvlad/Timska-kasa/commits/main)
+[![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025e8c?logo=dependabot)](.github/dependabot.yml)
+
+![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-12-ffca28?logo=firebase&logoColor=black)
+
+[**🚀 Демо**](https://rsvlad.github.io/Timska-kasa/) · [Речник домена](glossary.md) · [Пријава грешке](https://github.com/RSvlad/Timska-kasa/issues/new?template=bug_report.yml) · [Предлог функције](https://github.com/RSvlad/Timska-kasa/issues/new?template=feature_request.yml)
+
+</div>
 
 Апликација за праћење финансија малог тима или организације — једна заједничка каса, потпуна историја промета и алокација средстава у наменске фондове за планиране трошкове. Без бекенда, без сервера — искључиво Google/Firebase инфраструктура иза статичког React фронтенда.
 
@@ -24,9 +40,12 @@
 - [Домен](#домен)
 - [Tech stack](#tech-stack)
 - [Структура пројекта](#структура-пројекта)
-- [Покретање](#покретање)
+- [Брзи почетак](#брзи-почетак)
 - [Firebase подешавање](#firebase-подешавање)
 - [Деплој](#деплој)
+- [Допринос](#допринос)
+- [Безбедност](#безбедност)
+- [Лиценца](#лиценца)
 
 ---
 
@@ -111,6 +130,8 @@
 | База података | Cloud Firestore |
 | Складиштење фајлова | Firebase Storage (слике рачуна) |
 | Хостовање | GitHub Pages (статички build) |
+| CI | GitHub Actions (type-check + build) |
+| Одржавање зависности | Dependabot |
 | Бекенд сервер | — нема; сва логика извршава се на клијенту уз Firestore security rules |
 
 ---
@@ -137,34 +158,47 @@ src/
 │
 ├── App.tsx
 └── main.tsx
+
+.github/                        # CI, Dependabot, шаблони за issue-е и PR-ове
+firestore.rules · storage.rules # Правила приступа (извор истине за безбедност)
 ```
+
+Путање `@finance`, `@identity` и `@shared` су алијаси подешени у `vite.config.ts` и `tsconfig.json`.
 
 ---
 
-## Покретање
+## Брзи почетак
 
 ### Предуслови
-- Node.js
+
+- Node.js 22 (видети [`.nvmrc`](.nvmrc))
 - Firebase пројекат са омогућеним Authentication (Google Sign-In), Firestore и Storage
 
 ### Кораци
 
 ```bash
 # инсталација зависности
-npm install
+npm ci
 
 # копирање .env шаблона и попуњавање Firebase конфигурације
 cp .env.example .env
 
 # development сервер
 npm run dev
-
-# production build
-npm run build
-
-# preview build-а
-npm run preview
 ```
+
+### Доступне скрипте
+
+| Скрипта | Опис |
+|---|---|
+| `npm run dev` | Development сервер са hot reload-ом |
+| `npm run build` | Type-check (`tsc -b`) и production build |
+| `npm run preview` | Локални преглед production build-а |
+| `npm run deploy` | Build и објава на GitHub Pages |
+
+### Променљиве окружења
+
+Све променљиве су Firebase Web SDK конфигурација (види [`.env.example`](.env.example)). Ово **нису тајне** — Web API кључ је јаван по дизајну, а заштиту података обезбеђују [Firestore](firestore.rules) и [Storage](storage.rules) правила.
 
 ---
 
@@ -172,7 +206,10 @@ npm run preview
 
 1. Направити Firebase пројекат и укључити **Google Sign-In** као auth провајдера.
 2. У Firestore-у ручно креирати колекцију `allowedUsers` са бар једним документом чији је **ID email адреса Admin корисника**, и пољем које означава улогу.
-3. Применити правила из [`firestore.rules`](firestore.rules) и [`storage.rules`](storage.rules).
+3. Применити правила из [`firestore.rules`](firestore.rules) и [`storage.rules`](storage.rules) — кроз конзолу или Firebase CLI-јем:
+   ```bash
+   npx firebase-tools deploy --only firestore,storage
+   ```
 4. Попунити `.env` фајл на основу [`.env.example`](.env.example) Firebase Web SDK конфигурацијом.
 
 Пошто нема Admin UI-а за whitelist, додавање и уклањање корисника ради се искључиво директно кроз Firebase конзолу.
@@ -185,4 +222,18 @@ npm run preview
 npm run deploy
 ```
 
-Скрипта покреће production build и објављује садржај `dist/` фолдера на GitHub Pages (`gh-pages` пакет). Базна путања апликације подешена је за project page хостовање.
+Скрипта покреће production build и објављује садржај `dist/` фолдера на GitHub Pages (`gh-pages` пакет). Базна путања апликације подешена је за project page хостовање (`/Timska-kasa/`).
+
+---
+
+## Допринос
+
+Доприноси су добродошли! Погледајте [`CONTRIBUTING.md`](CONTRIBUTING.md) за упутства и [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) за правила понашања. Измене се бележе у [`CHANGELOG.md`](CHANGELOG.md).
+
+## Безбедност
+
+Уочену рањивост молимо пријавите приватно, према упутству у [`SECURITY.md`](SECURITY.md) — не кроз јавне issue-е.
+
+## Лиценца
+
+Дистрибуира се под [MIT лиценцом](LICENSE).
