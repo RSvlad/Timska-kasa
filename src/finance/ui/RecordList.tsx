@@ -40,9 +40,9 @@ function emptyForm() {
 }
 
 export function RecordList({ role, currentUserId }: Props) {
-  const records    = useRecordList();
-  const categories = useCategoryList();
-  const funds      = useFundList();
+  const { data: records }    = useRecordList();
+  const { data: categories } = useCategoryList();
+  const { data: funds }      = useFundList();
   const isAdmin    = role === "Admin";
 
   const [form,      setForm]      = useState(emptyForm);

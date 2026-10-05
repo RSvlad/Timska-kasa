@@ -252,8 +252,8 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 // ── Главна компонента ──────────────────────────────────────────────────────
 
 export function FundsPage({ role }: Props) {
-  const funds   = useFundList();
-  const records = useRecordList();
+  const { data: funds }   = useFundList();
+  const { data: records } = useRecordList();
   const isAdmin = role === "Admin";
 
   const [form,      setForm]      = useState(EMPTY_FORM);

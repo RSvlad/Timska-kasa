@@ -25,20 +25,34 @@ export type NewFund = {
 
 type FundDoc = Omit<Fund, "id" | "createdAt"> & { createdAt: Timestamp };
 
-function fromDoc(id: string, data: FundDoc): Fund {
+// Враћа null за неисправан документ да један лош фонд не сруши целу листу.
+function fromDoc(id: string, data: Partial<FundDoc>): Fund | null {
+  if (!(data.createdAt instanceof Timestamp)) {
+    console.warn(`Фонд ${id} прескочен: недостаје или је неисправан createdAt.`);
+    return null;
+  }
   return {
-    ...data,
+    ...(data as FundDoc),
     id,
     createdAt: data.createdAt.toDate(),
   };
 }
 
-export function subscribeFunds(callback: (funds: Fund[]) => void): () => void {
+export function subscribeFunds(
+  callback: (funds: Fund[]) => void,
+  onError?: (error: Error) => void
+): () => void {
   const ref = collection(db, COLLECTION);
-  return onSnapshot(ref, (snapshot) => {
-    const funds = snapshot.docs.map((d) => fromDoc(d.id, d.data() as FundDoc));
-    callback(funds);
-  });
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      const funds = snapshot.docs
+        .map((d) => fromDoc(d.id, d.data() as Partial<FundDoc>))
+        .filter((f): f is Fund => f !== null);
+      callback(funds);
+    },
+    (error) => onError?.(error)
+  );
 }
 
 export async function createFund(fund: NewFund): Promise<string> {

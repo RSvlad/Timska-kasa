@@ -22,7 +22,7 @@ const TYPE_SECTIONS: { type: RecordType; label: string; accent: string }[] = [
 ];
 
 export function CategoryList({ role }: Props) {
-  const categories = useCategoryList();
+  const { data: categories } = useCategoryList();
   const isAdmin    = role === "Admin";
 
   const [newName,    setNewName]    = useState("");

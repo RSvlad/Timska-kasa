@@ -156,9 +156,11 @@ function RecentItem({ record, categoryName }: { record: FinanceRecord; categoryN
 // ── Главна компонента ──────────────────────────────────────────────────────
 
 export function Dashboard() {
-  const records    = useRecordList();
-  const categories = useCategoryList();
-  const funds      = useFundList();
+  const { data: records,    loading: recordsLoading,    error: recordsError }    = useRecordList();
+  const { data: categories, loading: categoriesLoading, error: categoriesError } = useCategoryList();
+  const { data: funds,      loading: fundsLoading,      error: fundsError }      = useFundList();
+  const loading = recordsLoading || categoriesLoading || fundsLoading;
+  const loadError = recordsError ?? categoriesError ?? fundsError;
 
   const [period,         setPeriod]         = useState<PeriodPreset>("овај месец");
   const [typeFilter,     setTypeFilter]     = useState<RecordType | "Сви">("Сви");
@@ -194,7 +196,17 @@ export function Dashboard() {
     <div className="db-root">
 
       {/* ── Новчаник картице (кумулативно) ── */}
-      {totalCurrencies.length === 0 ? (
+      {loadError ? (
+        <div className="empty-state" role="alert">
+          <span className="empty-icon">⚠️</span>
+          <p>Грешка при учитавању података. Проверите приступ и покушајте поново.</p>
+        </div>
+      ) : loading ? (
+        <div className="empty-state">
+          <span className="empty-icon">⏳</span>
+          <p>Учитавање…</p>
+        </div>
+      ) : totalCurrencies.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">💰</span>
           <p>Нема записа. Додајте први унос.</p>

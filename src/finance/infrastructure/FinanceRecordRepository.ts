@@ -28,9 +28,15 @@ interface FinanceRecordDoc extends Omit<FinanceRecord, "id" | "dateTime" | "crea
   createdAt: Timestamp;
 }
 
-function fromDoc(id: string, data: FinanceRecordDoc): FinanceRecord {
+// Враћа null за неисправан документ (нпр. без `dateTime`) да један лош запис
+// не сруши целу листу.
+function fromDoc(id: string, data: Partial<FinanceRecordDoc>): FinanceRecord | null {
+  if (!(data.dateTime instanceof Timestamp) || !(data.createdAt instanceof Timestamp)) {
+    console.warn(`Запис ${id} прескочен: недостаје или је неисправан dateTime/createdAt.`);
+    return null;
+  }
   return {
-    ...data,
+    ...(data as FinanceRecordDoc),
     id,
     dateTime: data.dateTime.toDate(),
     createdAt: data.createdAt.toDate(),
@@ -41,14 +47,21 @@ function fromDoc(id: string, data: FinanceRecordDoc): FinanceRecord {
  * Real-time претплата на колекцију финансијских записа. Враћа unsubscribe функцију.
  * Сакрива Firestore детаље (onSnapshot) од application/UI слоја.
  */
-export function subscribe(callback: (records: FinanceRecord[]) => void): () => void {
+export function subscribe(
+  callback: (records: FinanceRecord[]) => void,
+  onError?: (error: Error) => void
+): () => void {
   const ref = collection(db, COLLECTION);
-  return onSnapshot(ref, (snapshot) => {
-    const records = snapshot.docs.map((d) =>
-      fromDoc(d.id, d.data() as FinanceRecordDoc)
-    );
-    callback(records);
-  });
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      const records = snapshot.docs
+        .map((d) => fromDoc(d.id, d.data() as Partial<FinanceRecordDoc>))
+        .filter((r): r is FinanceRecord => r !== null);
+      callback(records);
+    },
+    (error) => onError?.(error)
+  );
 }
 
 export async function createFinanceRecord(record: NewFinanceRecord): Promise<string> {

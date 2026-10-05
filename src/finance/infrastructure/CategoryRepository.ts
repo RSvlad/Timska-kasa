@@ -24,14 +24,21 @@ type CategoryPatch = Partial<Omit<Category, "id" | "type" | "system">>;
  * Real-time претплата на колекцију категорија. Враћа unsubscribe функцију.
  * Сакрива Firestore детаље (onSnapshot) од application/UI слоја.
  */
-export function subscribe(callback: (categories: Category[]) => void): () => void {
+export function subscribe(
+  callback: (categories: Category[]) => void,
+  onError?: (error: Error) => void
+): () => void {
   const ref = collection(db, COLLECTION);
-  return onSnapshot(ref, (snapshot) => {
-    const categories = snapshot.docs.map(
-      (d) => ({ id: d.id, ...d.data() } as Category)
-    );
-    callback(categories);
-  });
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      const categories = snapshot.docs.map(
+        (d) => ({ id: d.id, ...d.data() } as Category)
+      );
+      callback(categories);
+    },
+    (error) => onError?.(error)
+  );
 }
 
 export async function createCategory(category: NewCategory): Promise<string> {
