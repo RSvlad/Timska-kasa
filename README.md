@@ -9,27 +9,29 @@
 [![Last commit](https://img.shields.io/github/last-commit/RSvlad/Timska-kasa)](https://github.com/RSvlad/Timska-kasa/commits/main)
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025e8c?logo=dependabot)](.github/dependabot.yml)
 
-![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-12-ffca28?logo=firebase&logoColor=black)
 
-[**🚀 Демо**](https://rsvlad.github.io/Timska-kasa/) · [Речник домена](glossary.md) · [Пријава грешке](https://github.com/RSvlad/Timska-kasa/issues/new?template=bug_report.yml) · [Предлог функције](https://github.com/RSvlad/Timska-kasa/issues/new?template=feature_request.yml)
+[**🚀 Демо**](https://rsvlad.github.io/Timska-kasa/) · [Речник домена](docs/glossary.md) · [Пријава грешке](https://github.com/RSvlad/Timska-kasa/issues/new?template=bug_report.yml) · [Предлог функције](https://github.com/RSvlad/Timska-kasa/issues/new?template=feature_request.yml)
 
 </div>
 
 Апликација за праћење финансија малог тима или организације — једна заједничка каса, потпуна историја промета и алокација средстава у наменске фондове за планиране трошкове. Без бекенда, без сервера — искључиво Google/Firebase инфраструктура иза статичког React фронтенда.
 
+> 📋 **Ово је шаблон репозиторијум (template repo).** Ако желите да покренете сопствену верзију за свој тим или организацију, једноставно кликните **[Use this template](https://github.com/RSvlad/Timska-kasa/generate)** — више детаља у одељку [Сопствена верзија](#сопствена-верзија-шаблон).
+
 ## ПТСД принципи
 
 Четири стуба на којима је апликација заснована:
 
-| | Принцип | Шта то значи |
-|---|---|---|
-| 👁️ | **Прегледност** | Лак приступ информацијама — дашборд, филтери и историја промета на једном месту |
-| 🔍 | **Транспарентност** | Свака промена у каси остаје трајно евидентирана; ништа се тихо не брише (меко брисање, потпуна историја) |
-| 🔒 | **Сигурност** | Google/Firebase инфраструктура и строго раздвојене улоге приступа (Admin / Viewer) |
-| 🆓 | **Доступност** | Бесплатан хостинг (GitHub Pages) и бесплатна Firebase инфраструктура — нула трошкова покретања |
+|     | Принцип             | Шта то значи                                                                                             |
+| --- | ------------------- | -------------------------------------------------------------------------------------------------------- |
+| 👁️  | **Прегледност**     | Лак приступ информацијама — дашборд, филтери и историја промета на једном месту                          |
+| 🔍  | **Транспарентност** | Свака промена у каси остаје трајно евидентирана; ништа се тихо не брише (меко брисање, потпуна историја) |
+| 🔒  | **Сигурност**       | Google/Firebase инфраструктура и строго раздвојене улоге приступа (Admin / Viewer)                       |
+| 🆓  | **Доступност**      | Бесплатан хостинг (GitHub Pages) и бесплатна Firebase инфраструктура — нула трошкова покретања           |
 
 ---
 
@@ -42,6 +44,7 @@
 - [Структура пројекта](#структура-пројекта)
 - [Брзи почетак](#брзи-почетак)
 - [Firebase подешавање](#firebase-подешавање)
+- [Сопствена верзија (шаблон)](#сопствена-верзија-шаблон)
 - [Деплој](#деплој)
 - [Допринос](#допринос)
 - [Безбедност](#безбедност)
@@ -61,6 +64,7 @@
 - 📊 Дашборд са агрегираним стањем касе, филтрирањем по периоду, категорији, типу и валути
 - 🎯 **Фондови** — именоване алокације новца из касе за одређену намену (нпр. "Фонд за опрему"), без двоструке евиденције баланса
 - 👥 Две улоге приступа: **Admin** (пуна контрола) и **Viewer** (само читање)
+- 📱 **PWA** — може се инсталирати на телефон/рачунар и покренути као самосталну апликацију
 
 ---
 
@@ -88,12 +92,12 @@
 
 Сваки bounded context у коду прати исти слојевити распоред:
 
-| Слој | Одговорност |
-|---|---|
-| `domain/` | Ентитети, агрегати, вредносни објекти — чиста бизнис логика, без зависности од Firebase-а |
-| `application/` | React хукови који оркестрирају domain и infrastructure слој (use case-ови) |
-| `infrastructure/` | Repository имплементације — комуникација са Firestore/Storage |
-| `ui/` | React компоненте — презентациони слој |
+| Слој              | Одговорност                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `domain/`         | Ентитети, агрегати, вредносни објекти — чиста бизнис логика, без зависности од Firebase-а |
+| `application/`    | React хукови који оркестрирају domain и infrastructure слој (use case-ови)                |
+| `infrastructure/` | Repository имплементације — комуникација са Firestore/Storage                             |
+| `ui/`             | React компоненте — презентациони слој                                                     |
 
 Домен нема сопствени бекенд сервер: безбедност и интегритет података ослањају се искључиво на Firestore security rules, чиме је фронтенд-само приступ безбедан и без додатне инфраструктуре.
 
@@ -117,22 +121,26 @@
 
 Систем нема јавну регистрацију. Приступ имају искључиво корисници на **whitelist-и** (Firestore колекција `allowedUsers`), коју управља Admin директно кроз Firebase конзолу. Пријава се врши преко Google Sign-In.
 
-Потпун речник домена налази се у [`glossary.md`](glossary.md).
+Потпун речник домена налази се у [`docs/glossary.md`](docs/glossary.md), а архитектонске одлуке у [`docs/adr/`](docs/adr/README.md).
 
 ---
 
 ## Tech stack
 
-| Слој | Технологија |
-|---|---|
-| Frontend | React 18 + TypeScript, Vite |
-| Аутентификација | Firebase Authentication (Google Sign-In) |
-| База података | Cloud Firestore |
-| Складиштење фајлова | Firebase Storage (слике рачуна) |
-| Хостовање | GitHub Pages (статички build) |
-| CI | GitHub Actions (type-check + build) |
-| Одржавање зависности | Dependabot |
-| Бекенд сервер | — нема; сва логика извршава се на клијенту уз Firestore security rules |
+| Слој                 | Технологија                                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| Frontend             | React 19 + TypeScript, Vite 8                                          |
+| PWA                  | vite-plugin-pwa (Workbox, offline кеш статичких ресурса)               |
+| Аутентификација      | Firebase Authentication (Google Sign-In)                               |
+| База података        | Cloud Firestore                                                        |
+| Складиштење фајлова  | Firebase Storage (слике рачуна)                                        |
+| Тестирање            | Vitest (unit), Playwright (e2e), Firebase Emulator (security rules)    |
+| Квалитет кода        | ESLint, Prettier, Husky + lint-staged, commitlint (Conventional)       |
+| Хостовање            | GitHub Pages (статички build)                                          |
+| CI/CD                | GitHub Actions (lint, тестови, build, e2e, CodeQL, аутоматски деплој)  |
+| Верзионисање         | release-please (аутоматски CHANGELOG и release-и)                      |
+| Одржавање зависности | Dependabot                                                             |
+| Бекенд сервер        | — нема; сва логика извршава се на клијенту уз Firestore security rules |
 
 ---
 
@@ -142,10 +150,11 @@
 src/
 ├── finance/                    # Finance bounded context
 │   ├── domain/                 # FinanceRecord, Category, Fund (Фонд), Amount
-│   ├── application/            # useRecordList, useCategoryList, useFundList,
-│   │                           # fundService, useReceiptUpload
+│   ├── application/            # FinanceDataProvider, recordService, categoryService,
+│   │                           # fundService, receiptAccess, useRecordList,
+│   │                           # useCategoryList, useFundList, useReceiptUpload
 │   ├── infrastructure/         # FinanceRecordRepository, CategoryRepository,
-│   │                           # FundRepository, ReceiptStorage
+│   │                           # FundRepository, ReceiptStorage, seedSystemCategories
 │   └── ui/                     # Dashboard, RecordList, CategoryList, FundsPage
 │
 ├── identity/                   # Identity bounded context
@@ -154,12 +163,17 @@ src/
 │   └── infrastructure/         # UserRepository
 │
 ├── shared/
-│   └── infrastructure/         # firebase.ts (заједничка Firebase конфигурација)
+│   ├── infrastructure/         # firebase.ts, omitUndefined
+│   └── ui/                     # ConfirmDialog, ErrorBoundary
 │
 ├── App.tsx
 └── main.tsx
 
-.github/                        # CI, Dependabot, шаблони за issue-е и PR-ове
+e2e/                            # Playwright e2e тестови (пријава, PWA)
+rules-tests/                    # Тестови Firestore/Storage правила (Firebase Emulator)
+docs/                           # Речник домена и ADR-ови
+public/                         # Статички ресурси и PWA иконе
+.github/                        # CI, CodeQL, деплој, release-please, шаблони
 firestore.rules · storage.rules # Правила приступа (извор истине за безбедност)
 ```
 
@@ -189,12 +203,17 @@ npm run dev
 
 ### Доступне скрипте
 
-| Скрипта | Опис |
-|---|---|
-| `npm run dev` | Development сервер са hot reload-ом |
-| `npm run build` | Type-check (`tsc -b`) и production build |
-| `npm run preview` | Локални преглед production build-а |
-| `npm run deploy` | Build и објава на GitHub Pages |
+| Скрипта              | Опис                                                                |
+| -------------------- | ------------------------------------------------------------------- |
+| `npm run dev`        | Development сервер са hot reload-ом                                 |
+| `npm run build`      | Type-check (`tsc -b`) и production build                            |
+| `npm run preview`    | Локални преглед production build-а                                  |
+| `npm run lint`       | ESLint провера                                                      |
+| `npm run format`     | Форматирање кода (Prettier); `format:check` само проверава          |
+| `npm test`           | Unit тестови (Vitest); `test:coverage` додаје извештај покривености |
+| `npm run test:e2e`   | Playwright e2e тестови                                              |
+| `npm run test:rules` | Тестови security rules уз Firebase Emulator                         |
+| `npm run deploy`     | Ручни деплој: lint, тестови, build и објава на GitHub Pages         |
 
 ### Променљиве окружења
 
@@ -216,13 +235,29 @@ npm run dev
 
 ---
 
+## Сопствена верзија (шаблон)
+
+Репозиторијум је означен као **template repo**, па свако може направити независну копију без форковања и без историје комитова:
+
+1. Кликнути **Use this template → Create a new repository** (или отворити [овај линк](https://github.com/RSvlad/Timska-kasa/generate)).
+2. Направити сопствени Firebase пројекат и пратити упутство из одељка [Firebase подешавање](#firebase-подешавање).
+3. У подешавањима новог репозиторијума (**Settings → Secrets and variables → Actions**) додати `VITE_FIREBASE_*` секрете и укључити **GitHub Pages** (извор: GitHub Actions).
+4. Ако се нови репозиторијум не зове `Timska-kasa`, заменити путању `/Timska-kasa/` у [`vite.config.ts`](vite.config.ts) (`base`, `start_url`, `scope`, `navigateFallback`) и у `.firebaserc` по потреби.
+5. Ажурирати демо линкове и бејџеве у овом README-у на сопствени репозиторијум.
+
+Након тога сваки push на `main` аутоматски деплојује вашу верзију.
+
+---
+
 ## Деплој
+
+Деплој је аутоматски: сваки push на `main` покреће workflow [`deploy.yml`](.github/workflows/deploy.yml) (lint → тестови → build → GitHub Pages). Firebase конфигурација се чита из GitHub Secrets (`VITE_FIREBASE_*`). Базна путања апликације подешена је за project page хостовање (`/Timska-kasa/`).
+
+Ручни деплој (са локалне машине, потребан попуњен `.env`):
 
 ```bash
 npm run deploy
 ```
-
-Скрипта покреће production build и објављује садржај `dist/` фолдера на GitHub Pages (`gh-pages` пакет). Базна путања апликације подешена је за project page хостовање (`/Timska-kasa/`).
 
 ---
 
