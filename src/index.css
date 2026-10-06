@@ -1362,3 +1362,27 @@ tbody tr:hover td {
   color: var(--text-secondary);
   line-height: 1.5;
 }
+
+/* ── Report ───────────────────────────────────────────────────────────────── */
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.card-title-row .section-title {
+  margin-bottom: 0;
+}
+
+.report-dialog .period-tabs,
+.report-dialog .form-row,
+.report-dialog .error-text {
+  margin-top: 14px;
+}
+
+.report-dialog .form-actions {
+  margin-top: 18px;
+}

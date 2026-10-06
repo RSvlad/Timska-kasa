@@ -43,7 +43,7 @@ export default defineConfig({
   ],
   base: "/Timska-kasa/",
   test: {
-    exclude: ["**/node_modules/**", "dist/**", "rules-tests/**", "e2e/**"],
+    exclude: ["**/node_modules/**", "dist/**", "rules-tests/**", "e2e/**", "e2e-emulator/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
