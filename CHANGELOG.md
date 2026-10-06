@@ -2,6 +2,19 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.4](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.3...timska-kasa-v0.0.4) (2026-10-06)
+
+
+### Features
+
+* **report:** add PDF report with period selection ([24de032](https://github.com/RSvlad/Timska-kasa/commit/24de0320030f74821ed3438e62592b14ddc94c1a))
+* **report:** add PDF report with period selection ([b9d8194](https://github.com/RSvlad/Timska-kasa/commit/b9d8194b405bf8998a5a804355a2c01ac0f35198))
+
+
+### Bug Fixes
+
+* **test:** exclude e2e-emulator from vitest ([a59907e](https://github.com/RSvlad/Timska-kasa/commit/a59907e0343241677ef9cde4cbe0ea260984208b))
+
 ## [0.0.3](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.2...timska-kasa-v0.0.3) (2026-10-06)
 
 
