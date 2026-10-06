@@ -8,8 +8,8 @@ import type { RecordType } from "@finance/domain/Category";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { Fund } from "@finance/domain/Fund";
 import { formatAmount, toMinor, fromMinor } from "@finance/domain/Amount";
-
-type PeriodPreset = "данас" | "овај месец" | "ова година" | "све";
+import { periodBounds, type PeriodPreset } from "@finance/domain/Period";
+import { ReportDialog } from "@finance/ui/ReportDialog";
 
 const PERIODS: { id: PeriodPreset; label: string }[] = [
   { id: "данас", label: "Данас" },
@@ -17,25 +17,6 @@ const PERIODS: { id: PeriodPreset; label: string }[] = [
   { id: "ова година", label: "Година" },
   { id: "све", label: "Све" },
 ];
-
-function periodBounds(preset: PeriodPreset): { from: Date; to: Date } | null {
-  const now = new Date();
-  if (preset === "све") return null;
-  if (preset === "данас") {
-    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return { from, to: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) };
-  }
-  if (preset === "овај месец") {
-    return {
-      from: new Date(now.getFullYear(), now.getMonth(), 1),
-      to: new Date(now.getFullYear(), now.getMonth() + 1, 1),
-    };
-  }
-  return {
-    from: new Date(now.getFullYear(), 0, 1),
-    to: new Date(now.getFullYear() + 1, 0, 1),
-  };
-}
 
 const fmt = formatAmount;
 
@@ -183,6 +164,7 @@ export function Dashboard() {
   const [period, setPeriod] = useState<PeriodPreset>("овај месец");
   const [typeFilter, setTypeFilter] = useState<RecordType | "Сви">("Сви");
   const [categoryFilter, setCategoryFilter] = useState<string>("све");
+  const [reportOpen, setReportOpen] = useState(false);
 
   // Кумулативни салдо — сви записи, игнорише све филтере
   const totalSummary = useMemo(() => aggregate(records), [records]);
@@ -236,7 +218,16 @@ export function Dashboard() {
 
       {/* ── Период + филтери ── */}
       <div className="card">
-        <p className="section-title">Трансакције</p>
+        <div className="card-title-row">
+          <p className="section-title">Трансакције</p>
+          <button
+            className="ghost"
+            onClick={() => setReportOpen(true)}
+            disabled={loading || Boolean(loadError) || records.length === 0}
+          >
+            📄 Извештај
+          </button>
+        </div>
         <div className="period-tabs">
           {PERIODS.map((p) => (
             <button
@@ -290,6 +281,15 @@ export function Dashboard() {
           </div>
         )}
       </div>
+
+      {reportOpen && (
+        <ReportDialog
+          records={records}
+          categories={categories}
+          funds={funds}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { connectEmulators } from "@shared/infrastructure/emulators";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -20,6 +21,10 @@ const firebaseConfig = {
 export const firebaseApp = initializeApp(firebaseConfig);
 export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
+
+if (import.meta.env.VITE_USE_EMULATORS === "true") {
+  connectEmulators(auth, db);
+}
 
 // Analytics је опционо: иницијализује се само ако је measurementId задат и
 // ако окружење то подржава (нпр. не у e2e/SSR/блокираним колачићима).
