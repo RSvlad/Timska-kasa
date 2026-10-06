@@ -2,6 +2,20 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.2](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.1...timska-kasa-v0.0.2) (2026-10-06)
+
+
+### Features
+
+* add pwa support with offline caching ([b01b275](https://github.com/RSvlad/Timska-kasa/commit/b01b275ace37fbc64144e3f71598dab4e0c461db))
+
+
+### Bug Fixes
+
+* **deps:** override gaxios uuid to 11.1.1 (GHSA uuid buffer bounds) ([05bc134](https://github.com/RSvlad/Timska-kasa/commit/05bc134d96c338055f0ce9eef4a1bbddac4209c7))
+* **e2e:** provide dummy Firebase env so login screen renders in CI ([dfae88d](https://github.com/RSvlad/Timska-kasa/commit/dfae88d779f33bafe9c54ec8594cc2dad567f3b6))
+* show config error instead of blank page and correct 404 redirect base ([c497eb8](https://github.com/RSvlad/Timska-kasa/commit/c497eb87e1a5fb02fcffc61c8c84f023199058cd))
+
 ## [Unreleased]
 
 ### Додато
