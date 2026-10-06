@@ -2,6 +2,14 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.3](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.2...timska-kasa-v0.0.3) (2026-10-06)
+
+
+### Features
+
+* **firebase:** add optional Analytics via VITE_FIREBASE_MEASUREMENT_ID ([5aad1d9](https://github.com/RSvlad/Timska-kasa/commit/5aad1d968b6c98a85afbf5b1565ad61dc5d1a36b))
+* **firebase:** add optional Analytics via VITE_FIREBASE_MEASUREMENT_ID ([dcb1733](https://github.com/RSvlad/Timska-kasa/commit/dcb1733988efbbe60f3cbb4f83ec640fc36c51f4))
+
 ## [0.0.2](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.1...timska-kasa-v0.0.2) (2026-10-06)
 
 
