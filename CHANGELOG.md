@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Додато
+
 - Модернизован README (бејџеви, демо линк, скрипте, променљиве окружења)
 - `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`
 - Шаблони за issue-е и Pull Request-ове, `CODEOWNERS`
@@ -12,6 +13,7 @@
 - `.editorconfig` и `.nvmrc`
 
 ### Промењено
+
 - `package.json`: метаподаци (опис, лиценца, repository, engines)
 - `.gitignore`: Firebase и OS артефакти
 
