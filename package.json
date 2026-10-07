@@ -1,7 +1,7 @@
 {
   "name": "timska-kasa",
   "private": true,
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Апликација за вођење заједничке касе тима или организације — Firebase + React, без бекенда.",
   "license": "MIT",
   "author": "RSvlad",
