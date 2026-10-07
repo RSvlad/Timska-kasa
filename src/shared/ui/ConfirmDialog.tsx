@@ -2,6 +2,8 @@
 // Замена за native confirm() — визуелно конзистентан са остатком апликације.
 
 import { useEffect, useRef } from "react";
+import { useT } from "@shared/i18n/I18nProvider";
+import { sharedMessages } from "./messages";
 
 interface Props {
   open: boolean;
@@ -18,12 +20,13 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = "Потврди",
-  cancelLabel = "Откажи",
+  confirmLabel,
+  cancelLabel,
   danger = true,
   onConfirm,
   onCancel,
 }: Props) {
+  const t = useT(sharedMessages);
   const confirmRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCancelRef = useRef(onCancel);
@@ -93,10 +96,10 @@ export function ConfirmDialog({
             className={danger ? "danger-solid" : "primary"}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("confirm.confirm")}
           </button>
           <button className="ghost" onClick={onCancel}>
-            {cancelLabel}
+            {cancelLabel ?? t("confirm.cancel")}
           </button>
         </div>
       </div>

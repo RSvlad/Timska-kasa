@@ -10,6 +10,7 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: `http://localhost:${PORT}/Timska-kasa/`,
+    locale: "sr-RS",
     trace: "on-first-retry",
   },
   projects: [

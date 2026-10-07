@@ -132,6 +132,16 @@ h2 {
   font-size: 1rem;
 }
 
+.lang-switch {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.login-screen .lang-switch {
+  margin-top: 16px;
+}
+
 /* ── Main content ─────────────────────────────────────────────────────────── */
 
 .app-main {

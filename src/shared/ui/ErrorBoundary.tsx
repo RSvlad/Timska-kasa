@@ -1,6 +1,8 @@
 // UI: Хвата грешке рендеровања, да једна лоша ставка не обори целу апликацију.
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { useT } from "@shared/i18n/I18nProvider";
+import { sharedMessages } from "./messages";
 
 interface Props {
   children: ReactNode;
@@ -8,6 +10,19 @@ interface Props {
 
 interface State {
   error: Error | null;
+}
+
+function ErrorFallback({ onRetry }: { onRetry: () => void }) {
+  const t = useT(sharedMessages);
+  return (
+    <div className="empty-state" role="alert">
+      <span className="empty-icon">⚠️</span>
+      <p>{t("error.render")}</p>
+      <button className="primary" onClick={onRetry}>
+        {t("error.retry")}
+      </button>
+    </div>
+  );
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -23,14 +38,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (!this.state.error) return this.props.children;
-    return (
-      <div className="empty-state" role="alert">
-        <span className="empty-icon">⚠️</span>
-        <p>Дошло је до грешке при приказу. Освежи страницу или покушај поново.</p>
-        <button className="primary" onClick={() => this.setState({ error: null })}>
-          Покушај поново
-        </button>
-      </div>
-    );
+    return <ErrorFallback onRetry={() => this.setState({ error: null })} />;
   }
 }

@@ -8,13 +8,15 @@ import { loadUser } from "@identity/infrastructure/UserRepository";
 import { seedSystemCategories } from "@finance/infrastructure/seedSystemCategories";
 import type { User } from "@identity/domain/User";
 
+export type AuthError = "loadFailed" | "popupBlocked" | "signInFailed" | "signOutFailed";
+
 interface AuthState {
   user: User | null;
   loading: boolean;
   /** Пријављен Google налог који није на whitelist-и (email за приказ). */
   deniedEmail: string | null;
-  /** Порука о грешци при пријави/учитавању; null ако нема грешке. */
-  error: string | null;
+  /** Врста грешке при пријави/учитавању (UI је преводи); null ако нема грешке. */
+  error: AuthError | null;
   signIn: () => Promise<void>;
   signOutUser: () => Promise<void>;
 }
@@ -31,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [deniedEmail, setDeniedEmail] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AuthError | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -57,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Грешка при учитавању корисника", e);
         setUser(null);
         setDeniedEmail(null);
-        setError("Учитавање налога није успело. Покушајте поново.");
+        setError("loadFailed");
       } finally {
         setLoading(false);
       }
@@ -74,11 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const code = (e as { code?: string }).code ?? "";
       if (SILENT_SIGN_IN_ERRORS.has(code)) return;
       console.error("Грешка при пријави", e);
-      setError(
-        code === "auth/popup-blocked"
-          ? "Прегледач је блокирао прозор за пријаву. Дозволите искачуће прозоре."
-          : "Пријава није успела. Покушајте поново.",
-      );
+      setError(code === "auth/popup-blocked" ? "popupBlocked" : "signInFailed");
     }
   }
 
@@ -88,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signOut(auth);
     } catch (e) {
       console.error("Грешка при одјави", e);
-      setError("Одјава није успела. Покушајте поново.");
+      setError("signOutFailed");
     }
   }
 

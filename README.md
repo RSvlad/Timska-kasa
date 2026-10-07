@@ -14,6 +14,8 @@
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-12-ffca28?logo=firebase&logoColor=black)
 
+🌐 **Српски** · [English](README.en.md)
+
 [**🚀 Демо**](https://rsvlad.github.io/Timska-kasa/) · [Речник домена](docs/glossary.md) · [Пријава грешке](https://github.com/RSvlad/Timska-kasa/issues/new?template=bug_report.yml) · [Предлог функције](https://github.com/RSvlad/Timska-kasa/issues/new?template=feature_request.yml)
 
 </div>
@@ -64,6 +66,7 @@
 - 📊 Дашборд са агрегираним стањем касе, филтрирањем по периоду, категорији, типу и валути
 - 🎯 **Фондови** — именоване алокације новца из касе за одређену намену (нпр. "Фонд за опрему"), без двоструке евиденције баланса
 - 👥 Две улоге приступа: **Admin** (пуна контрола) и **Viewer** (само читање)
+- 🌐 **Два језика** — српски (ћирилица) и енглески, са променом језика у апликацији у сваком тренутку
 - 📱 **PWA** — може се инсталирати на телефон/рачунар и покренути као самосталну апликацију
 
 ---
@@ -134,6 +137,7 @@
 | Аутентификација      | Firebase Authentication (Google Sign-In)                               |
 | База података        | Cloud Firestore                                                        |
 | Складиштење фајлова  | Firebase Storage (слике рачуна)                                        |
+| Локализација         | Уграђен лаган i18n (`src/shared/i18n`), српски + енглески              |
 | Тестирање            | Vitest (unit), Playwright (e2e), Firebase Emulator (security rules)    |
 | Квалитет кода        | ESLint, Prettier, Husky + lint-staged, commitlint (Conventional)       |
 | Хостовање            | GitHub Pages (статички build)                                          |
@@ -163,8 +167,9 @@ src/
 │   └── infrastructure/         # UserRepository
 │
 ├── shared/
+│   ├── i18n/                   # Locale, I18nProvider, useT, defineMessages
 │   ├── infrastructure/         # firebase.ts, omitUndefined
-│   └── ui/                     # ConfirmDialog, ErrorBoundary
+│   └── ui/                     # ConfirmDialog, ErrorBoundary, LanguageSwitcher
 │
 ├── App.tsx
 └── main.tsx
@@ -178,6 +183,12 @@ firestore.rules · storage.rules # Правила приступа (извор �
 ```
 
 Путање `@finance`, `@identity` и `@shared` су алијаси подешени у `vite.config.ts` и `tsconfig.json`.
+
+### Локализација
+
+Апликација подржава **српски (ћирилица)** и **енглески**. При првом отварању језик се одређује према прегледачу (српски → српски, остало → енглески); избор направљен дугметом **СР / EN** (горња трака и екран за пријаву) чува се у `localStorage`.
+
+Сваки модул држи сопствени типизиран каталог порука поред свог кода (нпр. `src/App.messages.ts`, `src/shared/ui/messages.ts`), креиран помоћу `defineMessages({ sr: {...}, en: {...} })` — TypeScript прекида build ако кључ недостаје у једном од језика. Компоненте читају текстове преко `useT(messages)`.
 
 ---
 
