@@ -2,6 +2,13 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.5](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.4...timska-kasa-v0.0.5) (2026-10-07)
+
+
+### Features
+
+* **i18n:** add English and Serbian localization with language switcher ([e6d349d](https://github.com/RSvlad/Timska-kasa/commit/e6d349d2fe4e46dd757889b26efa96bda508c712))
+
 ## [0.0.4](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.3...timska-kasa-v0.0.4) (2026-10-06)
 
 
