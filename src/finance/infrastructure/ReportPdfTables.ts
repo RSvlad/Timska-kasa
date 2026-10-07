@@ -1,10 +1,10 @@
 import type { jsPDF } from "jspdf";
-import { formatAmount } from "@finance/domain/Amount";
 import type { CurrencyReport, ReportEntry } from "@finance/domain/Report";
 import {
   COLOR,
   CONTENT_WIDTH,
   PAGE,
+  fmtAmount,
   fmtDate,
   fmtTime,
   setText,
@@ -66,7 +66,7 @@ export function drawCategoryTotals(doc: jsPDF, cursor: Cursor, report: CurrencyR
     if (totals.length === 0) continue;
     drawSubheading(doc, cursor, title);
     for (const t of totals) {
-      drawTotalRow(doc, cursor, t.categoryName, formatAmount(t.total, report.currency), color);
+      drawTotalRow(doc, cursor, t.categoryName, fmtAmount(t.total, report.currency), color);
     }
     cursor.y += 4;
   }
@@ -123,7 +123,7 @@ function drawEntryAmount(doc: jsPDF, entry: ReportEntry, currency: string, y: nu
   const { type, amount } = entry.record;
   const isIncome = type === "Приход";
   setText(doc, 8.5, isIncome ? COLOR.income : COLOR.expense, true);
-  const text = `${isIncome ? SIGN.income : SIGN.expense}${formatAmount(amount.value, currency)}`;
+  const text = `${isIncome ? SIGN.income : SIGN.expense}${fmtAmount(amount.value, currency)}`;
   doc.text(text, PAGE.margin + CONTENT_WIDTH - 1, y, { align: "right" });
 }
 

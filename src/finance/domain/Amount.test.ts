@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_AMOUNT,
-  formatAmount,
   fromMinor,
   isValidCurrency,
   normalizeCurrency,
@@ -58,16 +57,5 @@ describe("минорне јединице", () => {
     for (const v of [0, 0.01, 1.15, 19.99, 1234567.89]) {
       expect(fromMinor(toMinor(v))).toBe(v);
     }
-  });
-});
-
-describe("formatAmount", () => {
-  it("садржи цифре износа", () => {
-    expect(formatAmount(1234.5, "RSD")).toMatch(/1\.?234/);
-  });
-
-  it("никад не баца изузетак и за неисправну валуту враћа шифру", () => {
-    expect(() => formatAmount(10, "12")).not.toThrow();
-    expect(formatAmount(10, "12")).toContain("12");
   });
 });

@@ -59,16 +59,3 @@ export function parseAmountInput(input: string): number | null {
   const n = Number(s);
   return Number.isFinite(n) && n > 0 && n <= MAX_AMOUNT ? n : null;
 }
-
-// Никад не баца изузетак: за неисправну валуту враћа "износ ШИФРА".
-export function formatAmount(value: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat("sr-RS", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `${value.toLocaleString("sr-RS", { maximumFractionDigits: 2 })} ${currency}`;
-  }
-}

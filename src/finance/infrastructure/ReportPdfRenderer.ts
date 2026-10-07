@@ -1,5 +1,4 @@
 import type { jsPDF } from "jspdf";
-import { formatAmount } from "@finance/domain/Amount";
 import { lastDayOf, toDayInput, type Period } from "@finance/domain/Period";
 import type { BalancePoint, CurrencyReport, Report } from "@finance/domain/Report";
 import { drawBalanceChart, type ChartSpan } from "@finance/infrastructure/ReportPdfChart";
@@ -10,6 +9,7 @@ import {
   CONTENT_WIDTH,
   Cursor,
   PAGE,
+  fmtAmount,
   fmtDate,
   fmtTime,
   setText,
@@ -63,7 +63,7 @@ function drawSummary(doc: jsPDF, cursor: Cursor, report: CurrencyReport): void {
     setText(doc, 8, COLOR.muted);
     doc.text(item.label, x, cursor.y + 3);
     setText(doc, 10.5, item.color, true);
-    doc.text(formatAmount(item.value, report.currency), x, cursor.y + 9);
+    doc.text(fmtAmount(item.value, report.currency), x, cursor.y + 9);
   });
   cursor.y += SUMMARY_HEIGHT;
 }

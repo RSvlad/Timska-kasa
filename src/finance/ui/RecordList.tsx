@@ -16,6 +16,7 @@ import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { RecordType } from "@finance/domain/Category";
 import { isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
+import { useFormatters } from "@shared/i18n/useFormatters";
 
 interface Props {
   role: Role;
@@ -50,6 +51,7 @@ function emptyForm() {
 }
 
 export function RecordList({ role, currentUserId }: Props) {
+  const fmt = useFormatters();
   const uid = useId();
   const { data: records } = useRecordList();
   const { data: categories } = useCategoryList();
@@ -350,8 +352,8 @@ export function RecordList({ role, currentUserId }: Props) {
                     <option value="">— Тимска каса —</option>
                     {compatibleFunds.map((f) => (
                       <option key={f.id} value={f.id}>
-                        {f.name} ({f.reserved.toLocaleString("sr-RS")} /{" "}
-                        {f.capacity.value.toLocaleString("sr-RS")} {f.capacity.currency})
+                        {f.name} ({fmt.number(f.reserved)} / {fmt.number(f.capacity.value)}{" "}
+                        {f.capacity.currency})
                       </option>
                     ))}
                   </select>
@@ -472,12 +474,12 @@ export function RecordList({ role, currentUserId }: Props) {
                       )}
                       {r.description && <> · {r.description}</>}
                     </span>
-                    <span className="recent-time">{r.dateTime.toLocaleString("sr-RS")}</span>
+                    <span className="recent-time">{fmt.dateTime(r.dateTime)}</span>
                   </div>
                   <div className="record-right">
                     <span className={`recent-amount ${isIncome ? "income-val" : "expense-val"}`}>
                       {isIncome ? "+" : "−"}
-                      {r.amount.value.toLocaleString("sr-RS")} {r.amount.currency}
+                      {fmt.number(r.amount.value)} {r.amount.currency}
                     </span>
                     {isAdmin && (
                       <button className="ghost edit-btn" onClick={() => startEdit(r)}>

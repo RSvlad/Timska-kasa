@@ -1,4 +1,6 @@
 import type { jsPDF } from "jspdf";
+import { formatAmount } from "@shared/i18n/format";
+import { LOCALE_FORMAT_TAGS } from "@shared/i18n/locale";
 
 export const FONT = "Roboto";
 
@@ -41,6 +43,12 @@ export function setText(doc: jsPDF, size: number, color: Rgb, bold = false): voi
   doc.setFont(FONT, bold ? "bold" : "normal");
   doc.setFontSize(size);
   doc.setTextColor(...color);
+}
+
+const PDF_FORMAT_TAG = LOCALE_FORMAT_TAGS.sr;
+
+export function fmtAmount(value: number, currency: string): string {
+  return formatAmount(value, currency, PDF_FORMAT_TAG);
 }
 
 export function fmtDate(date: Date): string {

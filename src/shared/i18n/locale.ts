@@ -1,3 +1,5 @@
+import type { CompactSuffixes } from "./format";
+
 export const LOCALES = ["sr", "en"] as const;
 
 export type Locale = (typeof LOCALES)[number];
@@ -14,6 +16,16 @@ export const LOCALE_TAGS: Record<Locale, string> = {
 export const LOCALE_NAMES: Record<Locale, string> = {
   sr: "Српски",
   en: "English",
+};
+
+export const LOCALE_FORMAT_TAGS: Record<Locale, string> = {
+  sr: "sr-RS",
+  en: "en-GB",
+};
+
+export const LOCALE_COMPACT_SUFFIXES: Record<Locale, CompactSuffixes> = {
+  sr: { thousand: "К", million: "М" },
+  en: { thousand: "K", million: "M" },
 };
 
 export const LOCALE_BADGES: Record<Locale, string> = {

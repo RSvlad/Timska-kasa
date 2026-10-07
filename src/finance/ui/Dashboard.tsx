@@ -7,9 +7,10 @@ import { useFundList } from "@finance/application/useFundList";
 import type { RecordType } from "@finance/domain/Category";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { Fund } from "@finance/domain/Fund";
-import { formatAmount, toMinor, fromMinor } from "@finance/domain/Amount";
+import { toMinor, fromMinor } from "@finance/domain/Amount";
 import { periodBounds, type PeriodPreset } from "@finance/domain/Period";
 import { ReportDialog } from "@finance/ui/ReportDialog";
+import { useFormatters } from "@shared/i18n/useFormatters";
 
 const PERIODS: { id: PeriodPreset; label: string }[] = [
   { id: "данас", label: "Данас" },
@@ -17,16 +18,6 @@ const PERIODS: { id: PeriodPreset; label: string }[] = [
   { id: "ова година", label: "Година" },
   { id: "све", label: "Све" },
 ];
-
-const fmt = formatAmount;
-
-function fmtCompact(value: number): string {
-  const abs = Math.abs(value);
-  const opts = { maximumFractionDigits: 2 };
-  if (abs >= 1_000_000) return (value / 1_000_000).toLocaleString("sr-RS", opts) + "М";
-  if (abs >= 1_000) return (value / 1_000).toLocaleString("sr-RS", opts) + "К";
-  return value.toLocaleString("sr-RS");
-}
 
 // Агрегација по валути из произвољног скупа записа (у стотинкама, па назад у децимални износ)
 function aggregate(records: FinanceRecord[]): Record<string, { income: number; expense: number }> {
@@ -57,6 +48,7 @@ function WalletCard({
   expense: number;
   funds: Fund[];
 }) {
+  const fmt = useFormatters();
   const balance = fromMinor(toMinor(income) - toMinor(expense));
   const positive = balance >= 0;
 
@@ -72,21 +64,23 @@ function WalletCard({
   return (
     <div className="wallet-card">
       <p className="wallet-currency">{currency}</p>
-      <p className={`wallet-balance ${positive ? "pos" : "neg"}`}>{fmt(balance, currency)}</p>
+      <p className={`wallet-balance ${positive ? "pos" : "neg"}`}>
+        {fmt.amount(balance, currency)}
+      </p>
 
       {hasReservations && (
         <div className="wallet-reserved-row">
           <div className="wallet-reserved-item">
             <span className="wallet-reserved-label">Слободно</span>
             <span className={`wallet-reserved-val ${free >= 0 ? "income-val" : "expense-val"}`}>
-              {fmt(free, currency)}
+              {fmt.amount(free, currency)}
             </span>
           </div>
           <div className="wallet-reserved-divider" />
           <div className="wallet-reserved-item">
             <span className="wallet-reserved-label">Алоцирано</span>
             <span className="wallet-reserved-val" style={{ color: "var(--accent)" }}>
-              {fmt(totalReserved, currency)}
+              {fmt.amount(totalReserved, currency)}
             </span>
           </div>
         </div>
@@ -96,13 +90,13 @@ function WalletCard({
         <div className="wallet-stat">
           <span className="stat-dot income-dot" />
           <span className="stat-label">Приходи</span>
-          <span className="stat-val income-val">+{fmtCompact(income)}</span>
+          <span className="stat-val income-val">+{fmt.compact(income)}</span>
         </div>
         <div className="wallet-divider" />
         <div className="wallet-stat">
           <span className="stat-dot expense-dot" />
           <span className="stat-label">Расходи</span>
-          <span className="stat-val expense-val">−{fmtCompact(expense)}</span>
+          <span className="stat-val expense-val">−{fmt.compact(expense)}</span>
         </div>
       </div>
 
@@ -124,8 +118,9 @@ function WalletCard({
 function RecentItem({ record, categoryName }: { record: FinanceRecord; categoryName: string }) {
   const isIncome = record.type === "Приход";
   const d = record.dateTime;
-  const dateStr = d.toLocaleDateString("sr-RS", { day: "numeric", month: "short" });
-  const timeStr = d.toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" });
+  const fmt = useFormatters();
+  const dateStr = fmt.date(d, { day: "numeric", month: "short" });
+  const timeStr = fmt.time(d, { hour: "2-digit", minute: "2-digit" });
   return (
     <div className="recent-item">
       <div className={`recent-icon ${isIncome ? "income-icon" : "expense-icon"}`}>
@@ -138,7 +133,7 @@ function RecentItem({ record, categoryName }: { record: FinanceRecord; categoryN
       <div className="recent-right">
         <span className={`recent-amount ${isIncome ? "income-val" : "expense-val"}`}>
           {isIncome ? "+" : "−"}
-          {fmtCompact(record.amount.value)} {record.amount.currency}
+          {fmt.compact(record.amount.value)} {record.amount.currency}
         </span>
         <span className="recent-time">
           {dateStr} {timeStr}

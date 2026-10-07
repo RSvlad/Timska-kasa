@@ -16,7 +16,6 @@ import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Fund } from "@finance/domain/Fund";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import {
-  formatAmount,
   isValidCurrency,
   normalizeCurrency,
   parseAmountInput,
@@ -24,14 +23,13 @@ import {
   fromMinor,
 } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
+import { useFormatters } from "@shared/i18n/useFormatters";
 
 interface Props {
   role: Role;
 }
 
 const EMPTY_FORM = { name: "", description: "", capacity: "", currency: "RSD" };
-
-const fmt = formatAmount;
 
 function ProgressBar({ pct }: { pct: number }) {
   const clamped = Math.min(100, Math.max(0, pct));
@@ -52,6 +50,7 @@ interface FundCardProps {
 }
 
 function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCardProps) {
+  const fmt = useFormatters();
   const uid = useId();
   const [deltaInput, setDeltaInput] = useState("");
   const [mode, setMode] = useState<"reserve" | "release" | null>(null);
@@ -232,18 +231,20 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
           <div className="fund-amounts">
             <div className="fund-amount-row">
               <span className="fund-amount-label">Алоцирано</span>
-              <span className="fund-amount-val">{fmt(fund.reserved, fund.capacity.currency)}</span>
+              <span className="fund-amount-val">
+                {fmt.amount(fund.reserved, fund.capacity.currency)}
+              </span>
             </div>
             <div className="fund-amount-row">
               <span className="fund-amount-label">Капацитет</span>
               <span className="fund-amount-val">
-                {fmt(fund.capacity.value, fund.capacity.currency)}
+                {fmt.amount(fund.capacity.value, fund.capacity.currency)}
               </span>
             </div>
             <div className="fund-amount-row">
               <span className="fund-amount-label">Слободно у фонду</span>
               <span className="fund-amount-val income-val">
-                {fmt(available, fund.capacity.currency)}
+                {fmt.amount(available, fund.capacity.currency)}
               </span>
             </div>
           </div>
@@ -283,7 +284,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                     <div className="form-field form-field--grow">
                       <label className="field-label" htmlFor={`${uid}-5`}>
                         {mode === "reserve"
-                          ? `Алоцирај (слободно у тимској каси: ${freeInCurrency.toLocaleString("sr-RS")} ${fund.capacity.currency})`
+                          ? `Алоцирај (слободно у тимској каси: ${fmt.number(freeInCurrency)} ${fund.capacity.currency})`
                           : "Дезалоцирај"}
                       </label>
                       <input
