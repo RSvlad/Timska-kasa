@@ -12,6 +12,7 @@ import {
   type NewFund,
 } from "@finance/infrastructure/FundRepository";
 import type { Fund } from "@finance/domain/Fund";
+import { FundError } from "@finance/domain/FundError";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import { toMinor, fromMinor } from "@finance/domain/Amount";
 
@@ -54,10 +55,7 @@ export async function editFund(
 // или док га референцирају записи (да не заостану сирочад `fundId`).
 export async function removeFund(fund: Fund, records: FinanceRecord[]): Promise<void> {
   const refs = records.filter((r) => r.fundId === fund.id).length;
-  if (refs > 0)
-    throw new Error(
-      `Фонд се не може обрисати: референцира га ${refs} запис(а). Прво уклони везу у записима.`,
-    );
+  if (refs > 0) throw new FundError({ code: "referencedByRecords", count: refs });
   return deleteFund(fund.id);
 }
 
@@ -71,18 +69,15 @@ export async function reserveIntoFund(
   records: FinanceRecord[],
   allFunds: Fund[],
 ): Promise<void> {
-  if (delta <= 0) throw new Error("Износ мора бити позитиван.");
+  if (delta <= 0) throw new FundError({ code: "amountNotPositive" });
   const newReserved = fromMinor(toMinor(fund.reserved) + toMinor(delta));
-  if (newReserved > fund.capacity.value)
-    throw new Error(
-      `Прелази капацитет фонда (макс. ${fromMinor(toMinor(fund.capacity.value) - toMinor(fund.reserved))} ${fund.capacity.currency}).`,
-    );
-  const free = freeBalanceByCurrency(records, allFunds);
-  const freeCur = free[fund.capacity.currency] ?? 0;
-  if (delta > freeCur)
-    throw new Error(
-      `Нема довољно слободних средстава у тимској каси (слободно: ${freeCur} ${fund.capacity.currency}).`,
-    );
+  const currency = fund.capacity.currency;
+  if (newReserved > fund.capacity.value) {
+    const max = fromMinor(toMinor(fund.capacity.value) - toMinor(fund.reserved));
+    throw new FundError({ code: "capacityExceeded", max, currency });
+  }
+  const free = freeBalanceByCurrency(records, allFunds)[currency] ?? 0;
+  if (delta > free) throw new FundError({ code: "insufficientFreeFunds", free, currency });
   await adjustFundReserved(fund.id, delta);
 }
 
@@ -91,11 +86,16 @@ export async function reserveIntoFund(
  * Баца грешку ако би reserved пао испод нуле.
  */
 export async function releaseFromFund(fund: Fund, delta: number): Promise<void> {
-  if (delta <= 0) throw new Error("Износ мора бити позитиван.");
+  if (delta <= 0) throw new FundError({ code: "amountNotPositive" });
   const newReserved = fromMinor(toMinor(fund.reserved) - toMinor(delta));
-  if (newReserved < 0)
-    throw new Error(
-      `Не може се дезалоцирати ${delta} — тренутно алоцирано само ${fund.reserved} ${fund.capacity.currency}.`,
-    );
+  if (newReserved < 0) {
+    const { reserved, capacity } = fund;
+    throw new FundError({
+      code: "insufficientReserved",
+      requested: delta,
+      reserved,
+      currency: capacity.currency,
+    });
+  }
   await adjustFundReserved(fund.id, -delta);
 }

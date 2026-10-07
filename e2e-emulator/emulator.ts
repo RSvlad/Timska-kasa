@@ -1,9 +1,14 @@
+import type { Page } from "@playwright/test";
+
 const PROJECT = "demo-timska-kasa";
 const AUTH_URL = "http://127.0.0.1:9099";
 const FIRESTORE_URL = "http://127.0.0.1:8080";
 const OWNER = { Authorization: "Bearer owner", "Content-Type": "application/json" };
 
 export const ADMIN = { email: "admin@example.com", password: "e2e-password-1" };
+export const VIEWER = { email: "viewer@example.com", password: "e2e-password-2" };
+
+type Account = { email: string; password: string };
 
 type Field =
   | { stringValue: string }
@@ -43,10 +48,14 @@ export async function resetEmulators(): Promise<void> {
   });
 }
 
-export async function createVerifiedAdmin(): Promise<void> {
+async function createVerifiedUser(account: Account, role: "Admin" | "Viewer"): Promise<void> {
   const signUp = await send(
     `${AUTH_URL}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=e2e-api-key`,
-    { method: "POST", headers: OWNER, body: JSON.stringify({ ...ADMIN, returnSecureToken: true }) },
+    {
+      method: "POST",
+      headers: OWNER,
+      body: JSON.stringify({ ...account, returnSecureToken: true }),
+    },
   );
   const { localId } = (await signUp.json()) as { localId: string };
   await send(`${AUTH_URL}/identitytoolkit.googleapis.com/v1/projects/${PROJECT}/accounts:update`, {
@@ -54,14 +63,23 @@ export async function createVerifiedAdmin(): Promise<void> {
     headers: OWNER,
     body: JSON.stringify({ localId, emailVerified: true }),
   });
-  await putDocument("allowedUsers", ADMIN.email, { role: str("Admin") });
+  await putDocument("allowedUsers", account.email, { role: str(role) });
 }
 
-export async function seedCategory(id: string, name: string, type: string): Promise<void> {
+export const createVerifiedAdmin = (): Promise<void> => createVerifiedUser(ADMIN, "Admin");
+
+export const createVerifiedViewer = (): Promise<void> => createVerifiedUser(VIEWER, "Viewer");
+
+export async function seedCategory(
+  id: string,
+  name: string,
+  type: string,
+  active = true,
+): Promise<void> {
   await putDocument("categories", id, {
     name: str(name),
     type: str(type),
-    active: bool(true),
+    active: bool(active),
     system: bool(false),
   });
 }
@@ -74,6 +92,7 @@ export interface SeedRecord {
   dateTime: Date;
   categoryId: string;
   counterparty: string;
+  receiptPath?: string;
 }
 
 export async function seedRecord(record: SeedRecord): Promise<void> {
@@ -84,6 +103,37 @@ export async function seedRecord(record: SeedRecord): Promise<void> {
     categoryId: str(record.categoryId),
     counterparty: str(record.counterparty),
     authorId: str("seed"),
+    ...(record.receiptPath ? { receiptPath: str(record.receiptPath) } : {}),
     createdAt: ts(new Date()),
   });
+}
+
+export interface SeedFund {
+  id: string;
+  name: string;
+  value: number;
+  currency: string;
+  reserved: number;
+}
+
+export async function seedFund(fund: SeedFund): Promise<void> {
+  await putDocument("funds", fund.id, {
+    name: str(fund.name),
+    capacity: amount(fund.value, fund.currency),
+    reserved: { doubleValue: fund.reserved },
+    createdAt: ts(new Date()),
+  });
+}
+
+export async function signIn(page: Page, account: Account = ADMIN): Promise<void> {
+  await page.goto("./");
+  await page.waitForFunction(() => "__e2eSignIn" in window);
+  await page.evaluate(
+    ([email, password]) =>
+      (window as unknown as { __e2eSignIn: (e: string, p: string) => Promise<void> }).__e2eSignIn(
+        email,
+        password,
+      ),
+    [account.email, account.password],
+  );
 }

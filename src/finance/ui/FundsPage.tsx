@@ -23,7 +23,11 @@ import {
   fromMinor,
 } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
+import { useT } from "@shared/i18n/I18nProvider";
 import { useFormatters } from "@shared/i18n/useFormatters";
+import { sharedMessages } from "@shared/ui/messages";
+import { fundsMessages } from "@finance/ui/FundsPage.messages";
+import { useFundErrorMessage } from "@finance/ui/useFundErrorMessage";
 
 interface Props {
   role: Role;
@@ -51,6 +55,9 @@ interface FundCardProps {
 
 function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCardProps) {
   const fmt = useFormatters();
+  const t = useT(fundsMessages);
+  const tShared = useT(sharedMessages);
+  const fundErrorMessage = useFundErrorMessage();
   const uid = useId();
   const [deltaInput, setDeltaInput] = useState("");
   const [mode, setMode] = useState<"reserve" | "release" | null>(null);
@@ -72,7 +79,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     if (busy) return;
     const delta = parseAmountInput(deltaInput);
     if (delta === null) {
-      setErr("Унеси позитиван износ (највише 2 децимале).");
+      setErr(t("funds.error.amount"));
       return;
     }
     setErr("");
@@ -86,7 +93,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       setDeltaInput("");
       setMode(null);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Грешка.");
+      setErr(fundErrorMessage(e, "funds.error.generic"));
     } finally {
       setBusy(false);
     }
@@ -96,15 +103,15 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     if (busy) return;
     const cap = parseAmountInput(editForm.capacity);
     if (!editForm.name.trim()) {
-      setErr("Назив је обавезан.");
+      setErr(t("funds.error.nameRequired"));
       return;
     }
     if (cap === null) {
-      setErr("Капацитет мора бити позитиван број (највише 2 децимале).");
+      setErr(t("funds.error.capacity"));
       return;
     }
     if (!isValidCurrency(editForm.currency)) {
-      setErr("Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).");
+      setErr(t("funds.error.currency"));
       return;
     }
     setErr("");
@@ -117,7 +124,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
       });
       setEditing(false);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Грешка.");
+      setErr(fundErrorMessage(e, "funds.error.generic"));
     } finally {
       setBusy(false);
     }
@@ -130,7 +137,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
     try {
       await removeFund(fund, records);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Фонд није обрисан. Провери везу и покушај поново.");
+      setErr(fundErrorMessage(e, "funds.error.deleteFailed"));
     } finally {
       setBusy(false);
     }
@@ -142,7 +149,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
         <div className="fund-edit-form">
           <div className="form-field">
             <label className="field-label" htmlFor={`${uid}-1`}>
-              Назив
+              {t("funds.field.name")}
             </label>
             <input
               id={`${uid}-1`}
@@ -152,7 +159,8 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
           </div>
           <div className="form-field">
             <label className="field-label" htmlFor={`${uid}-2`}>
-              Опис <span className="field-optional">(опционо)</span>
+              {t("funds.field.description")}{" "}
+              <span className="field-optional">{t("funds.field.optional")}</span>
             </label>
             <input
               id={`${uid}-2`}
@@ -163,7 +171,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
           <div className="form-row">
             <div className="form-field form-field--grow">
               <label className="field-label" htmlFor={`${uid}-3`}>
-                Капацитет
+                {t("funds.field.capacity")}
               </label>
               <input
                 id={`${uid}-3`}
@@ -174,7 +182,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
             </div>
             <div className="form-field form-field--currency">
               <label className="field-label" htmlFor={`${uid}-4`}>
-                Валута
+                {t("funds.field.currency")}
               </label>
               <input
                 id={`${uid}-4`}
@@ -187,7 +195,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
           {err && <p className="error-text">{err}</p>}
           <div className="form-actions">
             <button className="primary" disabled={busy} onClick={handleEdit}>
-              Сачувај
+              {t("funds.save")}
             </button>
             <button
               className="ghost"
@@ -196,7 +204,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                 setErr("");
               }}
             >
-              Откажи
+              {tShared("confirm.cancel")}
             </button>
           </div>
         </div>
@@ -211,6 +219,8 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
               <div className="fund-actions">
                 <button
                   className="ghost chip-action-btn"
+                  aria-label={t("funds.action.edit", { name: fund.name })}
+                  title={t("funds.action.edit", { name: fund.name })}
                   onClick={() => {
                     setEditing(true);
                     setErr("");
@@ -220,6 +230,8 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                 </button>
                 <button
                   className="ghost chip-action-btn danger"
+                  aria-label={t("funds.action.delete", { name: fund.name })}
+                  title={t("funds.action.delete", { name: fund.name })}
                   onClick={() => setConfirmingDelete(true)}
                 >
                   ✕
@@ -230,19 +242,19 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
           <div className="fund-amounts">
             <div className="fund-amount-row">
-              <span className="fund-amount-label">Алоцирано</span>
+              <span className="fund-amount-label">{t("funds.allocated")}</span>
               <span className="fund-amount-val">
                 {fmt.amount(fund.reserved, fund.capacity.currency)}
               </span>
             </div>
             <div className="fund-amount-row">
-              <span className="fund-amount-label">Капацитет</span>
+              <span className="fund-amount-label">{t("funds.field.capacity")}</span>
               <span className="fund-amount-val">
                 {fmt.amount(fund.capacity.value, fund.capacity.currency)}
               </span>
             </div>
             <div className="fund-amount-row">
-              <span className="fund-amount-label">Слободно у фонду</span>
+              <span className="fund-amount-label">{t("funds.freeInFund")}</span>
               <span className="fund-amount-val income-val">
                 {fmt.amount(available, fund.capacity.currency)}
               </span>
@@ -250,7 +262,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
           </div>
 
           <ProgressBar pct={pct} />
-          <p className="fund-pct-label">{Math.round(pct)}% попуњено</p>
+          <p className="fund-pct-label">{t("funds.filled", { pct: Math.round(pct) })}</p>
           {mode === null && err && <p className="error-text">{err}</p>}
 
           {isAdmin && (
@@ -265,7 +277,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                     }}
                     disabled={freeInCurrency <= 0 || available <= 0}
                   >
-                    + Алоцирај
+                    {t("funds.allocate")}
                   </button>
                   <button
                     className="ghost"
@@ -275,7 +287,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                     }}
                     disabled={fund.reserved <= 0}
                   >
-                    − Дезалоцирај
+                    {t("funds.deallocate")}
                   </button>
                 </div>
               ) : (
@@ -284,8 +296,11 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                     <div className="form-field form-field--grow">
                       <label className="field-label" htmlFor={`${uid}-5`}>
                         {mode === "reserve"
-                          ? `Алоцирај (слободно у тимској каси: ${fmt.number(freeInCurrency)} ${fund.capacity.currency})`
-                          : "Дезалоцирај"}
+                          ? t("funds.allocate.label", {
+                              amount: fmt.number(freeInCurrency),
+                              currency: fund.capacity.currency,
+                            })
+                          : t("funds.deallocate.label")}
                       </label>
                       <input
                         id={`${uid}-5`}
@@ -299,7 +314,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                   {err && <p className="error-text">{err}</p>}
                   <div className="form-actions">
                     <button className="primary" disabled={busy} onClick={handleTransfer}>
-                      Потврди
+                      {tShared("confirm.confirm")}
                     </button>
                     <button
                       className="ghost"
@@ -309,7 +324,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
                         setErr("");
                       }}
                     >
-                      Откажи
+                      {tShared("confirm.cancel")}
                     </button>
                   </div>
                 </div>
@@ -321,9 +336,9 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 
       <ConfirmDialog
         open={confirmingDelete}
-        title={`Обриши фонд „${fund.name}“?`}
-        message="Ова акција је трајна."
-        confirmLabel="Обриши"
+        title={t("funds.delete.title", { name: fund.name })}
+        message={t("funds.delete.message")}
+        confirmLabel={t("funds.delete")}
         onConfirm={confirmDelete}
         onCancel={() => setConfirmingDelete(false)}
       />
@@ -334,6 +349,7 @@ function FundCard({ fund, isAdmin, freeInCurrency, allFunds, records }: FundCard
 // ── Главна компонента ──────────────────────────────────────────────────────
 
 export function FundsPage({ role }: Props) {
+  const t = useT(fundsMessages);
   const uid = useId();
   const { data: funds } = useFundList();
   const { data: records } = useRecordList();
@@ -347,11 +363,9 @@ export function FundsPage({ role }: Props) {
   const freeBalance = freeBalanceByCurrency(records, funds);
 
   function validate(): string {
-    if (!form.name.trim()) return "Назив је обавезан.";
-    if (parseAmountInput(form.capacity) === null)
-      return "Капацитет мора бити позитиван број (највише 2 децимале).";
-    if (!isValidCurrency(form.currency))
-      return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
+    if (!form.name.trim()) return t("funds.error.nameRequired");
+    if (parseAmountInput(form.capacity) === null) return t("funds.error.capacity");
+    if (!isValidCurrency(form.currency)) return t("funds.error.currency");
     return "";
   }
 
@@ -376,7 +390,7 @@ export function FundsPage({ role }: Props) {
       setForm(EMPTY_FORM);
       setOpen(false);
     } catch {
-      setFormError("Фонд није сачуван. Провери везу и покушај поново.");
+      setFormError(t("funds.error.saveFailed"));
     } finally {
       setCreating(false);
     }
@@ -397,24 +411,25 @@ export function FundsPage({ role }: Props) {
               }
             }}
           >
-            <span>{open ? "✕  Затвори" : "+ Нови фонд"}</span>
+            <span>{open ? t("funds.close") : t("funds.new")}</span>
           </button>
           {open && (
             <div>
               <div className="form-field">
                 <label className="field-label" htmlFor={`${uid}-6`}>
-                  Назив
+                  {t("funds.field.name")}
                 </label>
                 <input
                   id={`${uid}-6`}
-                  placeholder="Нпр. Путни трошкови"
+                  placeholder={t("funds.placeholder.name")}
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </div>
               <div className="form-field">
                 <label className="field-label" htmlFor={`${uid}-7`}>
-                  Опис <span className="field-optional">(опционо)</span>
+                  {t("funds.field.description")}{" "}
+                  <span className="field-optional">{t("funds.field.optional")}</span>
                 </label>
                 <input
                   id={`${uid}-7`}
@@ -426,7 +441,7 @@ export function FundsPage({ role }: Props) {
               <div className="form-row">
                 <div className="form-field form-field--grow">
                   <label className="field-label" htmlFor={`${uid}-8`}>
-                    Капацитет
+                    {t("funds.field.capacity")}
                   </label>
                   <input
                     id={`${uid}-8`}
@@ -438,7 +453,7 @@ export function FundsPage({ role }: Props) {
                 </div>
                 <div className="form-field form-field--currency">
                   <label className="field-label" htmlFor={`${uid}-9`}>
-                    Валута
+                    {t("funds.field.currency")}
                   </label>
                   <input
                     id={`${uid}-9`}
@@ -452,7 +467,7 @@ export function FundsPage({ role }: Props) {
               {formError && <p className="error-text">{formError}</p>}
               <div className="form-actions">
                 <button className="primary" disabled={creating} onClick={handleCreate}>
-                  Креирај фонд
+                  {t("funds.create")}
                 </button>
               </div>
             </div>
@@ -464,7 +479,7 @@ export function FundsPage({ role }: Props) {
       {funds.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">🗂️</span>
-          <p>Нема фондова. {isAdmin ? "Додајте први фонд." : ""}</p>
+          <p>{isAdmin ? t("funds.emptyAdmin") : t("funds.empty")}</p>
         </div>
       ) : (
         <div className="funds-grid">

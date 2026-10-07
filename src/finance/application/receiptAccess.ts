@@ -48,6 +48,6 @@ export async function openReceipt(source: string): Promise<void> {
     }
   } catch {
     tab?.close();
-    throw new Error("Рачун није могуће отворити.");
+    throw new Error("Receipt URL could not be resolved.");
   }
 }

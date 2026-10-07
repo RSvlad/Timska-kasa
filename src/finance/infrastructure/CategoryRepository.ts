@@ -45,7 +45,7 @@ export async function createCategory(category: NewCategory): Promise<string> {
  */
 export async function updateCategory(id: string, patch: CategoryPatch): Promise<void> {
   if ("type" in patch || "system" in patch) {
-    throw new Error("Категорија: 'type' и 'system' су immutable после креирања.");
+    throw new Error("Category: 'type' and 'system' are immutable after creation.");
   }
   const ref = doc(db, COLLECTION, id);
   await updateDoc(ref, patch);

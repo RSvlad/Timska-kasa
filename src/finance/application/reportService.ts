@@ -136,9 +136,13 @@ export function buildReport(
   funds: Fund[],
   period: Period | null,
   generatedAt: Date = new Date(),
+  labelOf: (category: Category) => string = (category) => category.name,
 ): Report {
   const names: NameLookup = {
-    category: (id) => categories.find((c) => c.id === id)?.name ?? UNKNOWN_CATEGORY,
+    category: (id) => {
+      const category = categories.find((c) => c.id === id);
+      return category ? labelOf(category) : UNKNOWN_CATEGORY;
+    },
     fund: (id) => funds.find((f) => f.id === id)?.name ?? UNKNOWN_FUND,
   };
   const groups = groupByCurrency(records);

@@ -9,6 +9,7 @@ import {
 } from "@finance/application/recordService";
 import { useRecordList } from "@finance/application/useRecordList";
 import { useCategoryList } from "@finance/application/useCategoryList";
+import { useCategoryLabel } from "@finance/application/useCategoryLabel";
 import { useFundList } from "@finance/application/useFundList";
 import { useReceiptUpload } from "@finance/application/useReceiptUpload";
 import { openReceipt, receiptSource, useReceiptUrl } from "@finance/application/receiptAccess";
@@ -16,7 +17,14 @@ import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { RecordType } from "@finance/domain/Category";
 import { isValidCurrency, normalizeCurrency, parseAmountInput } from "@finance/domain/Amount";
 import type { Role } from "@identity/domain/User";
+import { useT } from "@shared/i18n/I18nProvider";
 import { useFormatters } from "@shared/i18n/useFormatters";
+import { recordsMessages } from "@finance/ui/RecordList.messages";
+import { financeMessages, RECORD_TYPE_KEYS } from "@finance/ui/finance.messages";
+import {
+  useFundChargeErrorMessage,
+  useReceiptErrorMessage,
+} from "@finance/ui/useRecordErrorMessages";
 
 interface Props {
   role: Role;
@@ -25,10 +33,18 @@ interface Props {
 
 /** Умањена слика рачуна (URL се добија на захтев). HEIC већина прегледача не приказује: уместо покварене слике остаје текст (линк је око њега). */
 function ReceiptThumb({ source }: { source: string }) {
+  const t = useT(recordsMessages);
   const url = useReceiptUrl(source);
   const [failed, setFailed] = useState(false);
-  if (failed || !url) return <span>🧾 Отвори рачун</span>;
-  return <img src={url} alt="Рачун" className="receipt-thumb" onError={() => setFailed(true)} />;
+  if (failed || !url) return <span>{t("records.receipt.open")}</span>;
+  return (
+    <img
+      src={url}
+      alt={t("records.receipt.alt")}
+      className="receipt-thumb"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 // Форматира Date у локално "YYYY-MM-DDTHH:mm" (формат за datetime-local).
@@ -52,6 +68,11 @@ function emptyForm() {
 
 export function RecordList({ role, currentUserId }: Props) {
   const fmt = useFormatters();
+  const t = useT(recordsMessages);
+  const tf = useT(financeMessages);
+  const labelOf = useCategoryLabel();
+  const fundChargeMessage = useFundChargeErrorMessage();
+  const receiptMessage = useReceiptErrorMessage();
   const uid = useId();
   const { data: records } = useRecordList();
   const { data: categories } = useCategoryList();
@@ -80,7 +101,8 @@ export function RecordList({ role, currentUserId }: Props) {
   function categoryName(id: string): string {
     const cat = categories.find((c) => c.id === id);
     if (!cat) return id;
-    return cat.active ? cat.name : `${cat.name} (деактивирана)`;
+    const label = labelOf(cat);
+    return cat.active ? label : t("records.category.inactive", { name: label });
   }
 
   function fundName(id: string): string {
@@ -88,12 +110,10 @@ export function RecordList({ role, currentUserId }: Props) {
   }
 
   function validate(): string {
-    if (parseAmountInput(form.value) === null)
-      return "Износ мора бити позитиван број (највише 2 децимале).";
-    if (!isValidCurrency(form.currency))
-      return "Валута мора бити важећа шифра од 3 слова (нпр. RSD, EUR).";
-    if (!form.categoryId) return "Категорија је обавезна.";
-    if (!form.counterparty.trim()) return "Контрагент је обавезан.";
+    if (parseAmountInput(form.value) === null) return t("records.error.amount");
+    if (!isValidCurrency(form.currency)) return t("records.error.currency");
+    if (!form.categoryId) return t("records.error.categoryRequired");
+    if (!form.counterparty.trim()) return t("records.error.counterpartyRequired");
     return "";
   }
 
@@ -129,8 +149,8 @@ export function RecordList({ role, currentUserId }: Props) {
       } catch (e) {
         setFormError(
           e instanceof FundChargeError
-            ? e.message
-            : "Запис није сачуван. Провери везу и покушај поново.",
+            ? fundChargeMessage(e.detail)
+            : t("records.error.saveFailed"),
         );
         return;
       }
@@ -144,9 +164,7 @@ export function RecordList({ role, currentUserId }: Props) {
           await receiptUpload.attachReceipt(recordId, pendingReceipt, hadPrevious);
         } catch {
           setEditId(recordId);
-          setFormError(
-            "Запис је сачуван, али рачун није отпремљен. Покушај поново да сачуваш измене.",
-          );
+          setFormError(t("records.error.receiptFailed"));
           return;
         }
       }
@@ -213,7 +231,7 @@ export function RecordList({ role, currentUserId }: Props) {
   function handleOpenReceipt(e: React.MouseEvent, source: string) {
     e.preventDefault();
     setReceiptError("");
-    openReceipt(source).catch((err: Error) => setReceiptError(err.message));
+    openReceipt(source).catch(() => setReceiptError(t("records.error.receipt.openFailed")));
   }
 
   const sorted = [...records].sort((a, b) => b.dateTime.getTime() - a.dateTime.getTime());
@@ -234,27 +252,27 @@ export function RecordList({ role, currentUserId }: Props) {
               setOpen(true);
             }}
           >
-            <span>{open ? "✕  Затвори" : "+ Нови запис"}</span>
+            <span>{open ? t("records.close") : t("records.new")}</span>
           </button>
 
           {open && (
             <div className="record-form">
               {/* Ред 1: тип */}
               <div className="form-type-row">
-                {(["Приход", "Расход"] as RecordType[]).map((t) => (
+                {(["Приход", "Расход"] as RecordType[]).map((kind) => (
                   <button
-                    key={t}
-                    className={`type-btn ${form.type === t ? (t === "Приход" ? "income-active" : "expense-active") : ""}`}
+                    key={kind}
+                    className={`type-btn ${form.type === kind ? (kind === "Приход" ? "income-active" : "expense-active") : ""}`}
                     onClick={() =>
                       setForm({
                         ...form,
-                        type: t,
+                        type: kind,
                         categoryId: "",
-                        fundId: t === "Расход" ? form.fundId : "",
+                        fundId: kind === "Расход" ? form.fundId : "",
                       })
                     }
                   >
-                    {t === "Приход" ? "↑ Приход" : "↓ Расход"}
+                    {`${kind === "Приход" ? "↑" : "↓"} ${tf(RECORD_TYPE_KEYS[kind])}`}
                   </button>
                 ))}
               </div>
@@ -263,7 +281,7 @@ export function RecordList({ role, currentUserId }: Props) {
               <div className="form-row">
                 <div className="form-field form-field--grow">
                   <label className="field-label" htmlFor={`${uid}-1`}>
-                    Износ
+                    {t("records.field.amount")}
                   </label>
                   <input
                     id={`${uid}-1`}
@@ -275,7 +293,7 @@ export function RecordList({ role, currentUserId }: Props) {
                 </div>
                 <div className="form-field form-field--currency">
                   <label className="field-label" htmlFor={`${uid}-2`}>
-                    Валута
+                    {t("records.field.currency")}
                   </label>
                   <input
                     id={`${uid}-2`}
@@ -296,17 +314,17 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Ред 3: категорија */}
               <div className="form-field">
                 <label className="field-label" htmlFor={`${uid}-3`}>
-                  Категорија
+                  {t("records.field.category")}
                 </label>
                 <select
                   id={`${uid}-3`}
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                 >
-                  <option value="">— Одабери —</option>
+                  <option value="">{t("records.select.choose")}</option>
                   {filteredCategories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {labelOf(c)}
                     </option>
                   ))}
                 </select>
@@ -315,7 +333,7 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Ред 4а: датум */}
               <div className="form-field">
                 <label className="field-label" htmlFor={`${uid}-4`}>
-                  Датум и време
+                  {t("records.field.dateTime")}
                 </label>
                 <input
                   id={`${uid}-4`}
@@ -328,11 +346,11 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Ред 5: контрагент */}
               <div className="form-field">
                 <label className="field-label" htmlFor={`${uid}-5`}>
-                  Контрагент
+                  {t("records.field.counterparty")}
                 </label>
                 <input
                   id={`${uid}-5`}
-                  placeholder="Нпр. Прометеј д.о.о."
+                  placeholder={t("records.placeholder.counterparty")}
                   value={form.counterparty}
                   onChange={(e) => setForm({ ...form, counterparty: e.target.value })}
                 />
@@ -342,14 +360,15 @@ export function RecordList({ role, currentUserId }: Props) {
               {form.type === "Расход" && compatibleFunds.length > 0 && (
                 <div className="form-field">
                   <label className="field-label" htmlFor={`${uid}-6`}>
-                    Фонд <span className="field-optional">(опционо — терети фонд уместо касе)</span>
+                    {t("records.field.fund")}{" "}
+                    <span className="field-optional">{t("records.field.fundHint")}</span>
                   </label>
                   <select
                     id={`${uid}-6`}
                     value={form.fundId}
                     onChange={(e) => setForm({ ...form, fundId: e.target.value })}
                   >
-                    <option value="">— Тимска каса —</option>
+                    <option value="">{t("records.select.teamFund")}</option>
                     {compatibleFunds.map((f) => (
                       <option key={f.id} value={f.id}>
                         {f.name} ({fmt.number(f.reserved)} / {fmt.number(f.capacity.value)}{" "}
@@ -363,7 +382,8 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Ред 6: опис */}
               <div className="form-field">
                 <label className="field-label" htmlFor={`${uid}-7`}>
-                  Опис <span className="field-optional">(опционо)</span>
+                  {t("records.field.description")}{" "}
+                  <span className="field-optional">{t("records.field.optional")}</span>
                 </label>
                 <input
                   id={`${uid}-7`}
@@ -376,7 +396,8 @@ export function RecordList({ role, currentUserId }: Props) {
               {/* Рачун — опциона слика */}
               <div className="form-field">
                 <label className="field-label">
-                  Рачун <span className="field-optional">(опционо)</span>
+                  {t("records.field.receipt")}{" "}
+                  <span className="field-optional">{t("records.field.optional")}</span>
                 </label>
 
                 {editId &&
@@ -395,7 +416,7 @@ export function RecordList({ role, currentUserId }: Props) {
                           disabled={receiptUpload.uploading}
                           onClick={handleRemoveExistingReceipt}
                         >
-                          Уклони рачун
+                          {t("records.receipt.remove")}
                         </button>
                       </div>
                     ) : null;
@@ -411,25 +432,33 @@ export function RecordList({ role, currentUserId }: Props) {
                 />
                 <label htmlFor="receipt-file-input" className="file-picker-btn">
                   <span className="file-picker-icon">🧾</span>
-                  <span>{pendingReceipt ? "Промени слику" : "Изабери слику"}</span>
+                  <span>
+                    {pendingReceipt ? t("records.receipt.change") : t("records.receipt.choose")}
+                  </span>
                 </label>
 
                 {pendingReceipt && (
-                  <p className="receipt-pending">Одабрано: {pendingReceipt.name}</p>
+                  <p className="receipt-pending">
+                    {t("records.receipt.selected", { name: pendingReceipt.name })}
+                  </p>
                 )}
-                {receiptUpload.uploading && <p className="receipt-pending">Отпремање рачуна…</p>}
-                {receiptUpload.error && <p className="error-text">{receiptUpload.error}</p>}
+                {receiptUpload.uploading && (
+                  <p className="receipt-pending">{t("records.receipt.uploading")}</p>
+                )}
+                {receiptUpload.error && (
+                  <p className="error-text">{receiptMessage(receiptUpload.error)}</p>
+                )}
               </div>
 
               {formError && <p className="error-text">{formError}</p>}
 
               <div className="form-actions">
                 <button className="primary" disabled={submitting} onClick={handleSubmit}>
-                  {editId ? "Сачувај измене" : "Додај запис"}
+                  {editId ? t("records.save") : t("records.add")}
                 </button>
                 {editId && (
                   <button className="ghost" disabled={submitting} onClick={cancelEdit}>
-                    Откажи
+                    {t("records.cancel")}
                   </button>
                 )}
               </div>
@@ -440,10 +469,10 @@ export function RecordList({ role, currentUserId }: Props) {
 
       {/* ── Листа записа ── */}
       <div className="card">
-        <p className="section-title">Сви записи</p>
+        <p className="section-title">{t("records.title")}</p>
         {receiptError && <p className="error-text">{receiptError}</p>}
         {sorted.length === 0 ? (
-          <p className="empty-inline">Нема записа.</p>
+          <p className="empty-inline">{t("records.empty")}</p>
         ) : (
           <div className="record-list">
             {sorted.map((r) => {
@@ -468,7 +497,7 @@ export function RecordList({ role, currentUserId }: Props) {
                           {" "}
                           ·{" "}
                           <a href="#" onClick={(e) => handleOpenReceipt(e, receiptSource(r)!)}>
-                            🧾 рачун
+                            {t("records.receipt.link")}
                           </a>
                         </>
                       )}
@@ -483,7 +512,7 @@ export function RecordList({ role, currentUserId }: Props) {
                     </span>
                     {isAdmin && (
                       <button className="ghost edit-btn" onClick={() => startEdit(r)}>
-                        Уреди
+                        {t("records.edit")}
                       </button>
                     )}
                   </div>

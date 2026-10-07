@@ -13,6 +13,7 @@ import {
 import { db } from "@shared/infrastructure/firebase";
 import { omitUndefined } from "@shared/infrastructure/omitUndefined";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
+import { FundChargeError } from "@finance/domain/FundChargeError";
 
 const COLLECTION = "transactions";
 const FUNDS_COLLECTION = "funds";
@@ -63,14 +64,6 @@ export function subscribe(
   );
 }
 
-/** Грешка пословног правила при терећењу фонда (безбедна за приказ кориснику). */
-export class FundChargeError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "FundChargeError";
-  }
-}
-
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 interface FundCharge {
@@ -82,7 +75,7 @@ interface FundCharge {
 // Само Расход са fundId терети фонд (смањује `reserved`); Приход са fundId није дозвољен.
 function chargeOf(r: FundCharge): { fundId: string; value: number } | null {
   if (!r.fundId) return null;
-  if (r.type !== "Расход") throw new FundChargeError("Фонд се може терети само расходом.");
+  if (r.type !== "Расход") throw new FundChargeError({ code: "expenseOnly" });
   return { fundId: r.fundId, value: r.amount.value };
 }
 
@@ -110,19 +103,18 @@ async function applyFundCharges(
 
   for (const { ref, delta, isCharge, snap } of loaded) {
     if (delta === 0) continue;
-    if (!snap.exists()) throw new FundChargeError("Фонд не постоји.");
+    if (!snap.exists()) throw new FundChargeError({ code: "fundNotFound" });
     const f = snap.data() as { reserved: number; capacity: { value: number; currency: string } };
     if (isCharge && f.capacity.currency !== currency)
-      throw new FundChargeError(
-        `Валута записа се не поклапа са валутом фонда (${f.capacity.currency}).`,
-      );
+      throw new FundChargeError({ code: "currencyMismatch", currency: f.capacity.currency });
     const next = round2(f.reserved + delta);
     if (next < 0)
-      throw new FundChargeError(
-        `У фонду је алоцирано само ${f.reserved} ${f.capacity.currency}, а расход је већи.`,
-      );
-    if (next > f.capacity.value)
-      throw new FundChargeError("Враћање у фонд би премашило његов капацитет.");
+      throw new FundChargeError({
+        code: "insufficientReserved",
+        reserved: f.reserved,
+        currency: f.capacity.currency,
+      });
+    if (next > f.capacity.value) throw new FundChargeError({ code: "capacityExceeded" });
     tx.update(ref, { reserved: next });
   }
 }
@@ -149,7 +141,7 @@ export async function createFinanceRecord(record: NewFinanceRecord): Promise<str
  */
 export async function updateFinanceRecord(id: string, patch: FinanceRecordPatch): Promise<void> {
   if ("authorId" in patch || "createdAt" in patch) {
-    throw new Error("ФинансијскиЗапис: 'authorId' и 'createdAt' су immutable после креирања.");
+    throw new Error("FinanceRecord: 'authorId' and 'createdAt' are immutable after creation.");
   }
   const ref = doc(db, COLLECTION, id);
   const data: Record<string, unknown> = { ...patch };
@@ -165,7 +157,7 @@ export async function updateFinanceRecord(id: string, patch: FinanceRecordPatch)
   }
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error("Запис не постоји.");
+    if (!snap.exists()) throw new Error("FinanceRecord not found.");
     const old = snap.data() as FinanceRecordDoc;
     const next: FundCharge = {
       type: patch.type ?? old.type,

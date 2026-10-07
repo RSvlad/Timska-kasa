@@ -5,7 +5,7 @@ import {
   updateFinanceRecord,
 } from "@finance/infrastructure/FinanceRecordRepository";
 
-export { FundChargeError } from "@finance/infrastructure/FinanceRecordRepository";
+export { FundChargeError } from "@finance/domain/FundChargeError";
 export type { NewFinanceRecord } from "@finance/infrastructure/FinanceRecordRepository";
 
 export const addRecord = createFinanceRecord;

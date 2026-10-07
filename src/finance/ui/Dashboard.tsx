@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRecordList } from "@finance/application/useRecordList";
 import { useCategoryList } from "@finance/application/useCategoryList";
+import { useCategoryLabel } from "@finance/application/useCategoryLabel";
 import { useFundList } from "@finance/application/useFundList";
 import type { RecordType } from "@finance/domain/Category";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
@@ -10,14 +11,16 @@ import type { Fund } from "@finance/domain/Fund";
 import { toMinor, fromMinor } from "@finance/domain/Amount";
 import { periodBounds, type PeriodPreset } from "@finance/domain/Period";
 import { ReportDialog } from "@finance/ui/ReportDialog";
+import { useT } from "@shared/i18n/I18nProvider";
 import { useFormatters } from "@shared/i18n/useFormatters";
+import { dashboardMessages } from "@finance/ui/Dashboard.messages";
+import {
+  financeMessages,
+  PERIOD_PRESET_KEYS,
+  RECORD_TYPE_KEYS,
+} from "@finance/ui/finance.messages";
 
-const PERIODS: { id: PeriodPreset; label: string }[] = [
-  { id: "данас", label: "Данас" },
-  { id: "овај месец", label: "Месец" },
-  { id: "ова година", label: "Година" },
-  { id: "све", label: "Све" },
-];
+const PERIOD_TABS: PeriodPreset[] = ["данас", "овај месец", "ова година", "све"];
 
 // Агрегација по валути из произвољног скупа записа (у стотинкама, па назад у децимални износ)
 function aggregate(records: FinanceRecord[]): Record<string, { income: number; expense: number }> {
@@ -49,6 +52,7 @@ function WalletCard({
   funds: Fund[];
 }) {
   const fmt = useFormatters();
+  const t = useT(dashboardMessages);
   const balance = fromMinor(toMinor(income) - toMinor(expense));
   const positive = balance >= 0;
 
@@ -71,14 +75,14 @@ function WalletCard({
       {hasReservations && (
         <div className="wallet-reserved-row">
           <div className="wallet-reserved-item">
-            <span className="wallet-reserved-label">Слободно</span>
+            <span className="wallet-reserved-label">{t("dashboard.free")}</span>
             <span className={`wallet-reserved-val ${free >= 0 ? "income-val" : "expense-val"}`}>
               {fmt.amount(free, currency)}
             </span>
           </div>
           <div className="wallet-reserved-divider" />
           <div className="wallet-reserved-item">
-            <span className="wallet-reserved-label">Алоцирано</span>
+            <span className="wallet-reserved-label">{t("dashboard.allocated")}</span>
             <span className="wallet-reserved-val" style={{ color: "var(--accent)" }}>
               {fmt.amount(totalReserved, currency)}
             </span>
@@ -89,13 +93,13 @@ function WalletCard({
       <div className="wallet-stats">
         <div className="wallet-stat">
           <span className="stat-dot income-dot" />
-          <span className="stat-label">Приходи</span>
+          <span className="stat-label">{t("dashboard.income")}</span>
           <span className="stat-val income-val">+{fmt.compact(income)}</span>
         </div>
         <div className="wallet-divider" />
         <div className="wallet-stat">
           <span className="stat-dot expense-dot" />
-          <span className="stat-label">Расходи</span>
+          <span className="stat-label">{t("dashboard.expenses")}</span>
           <span className="stat-val expense-val">−{fmt.compact(expense)}</span>
         </div>
       </div>
@@ -146,6 +150,9 @@ function RecentItem({ record, categoryName }: { record: FinanceRecord; categoryN
 // ── Главна компонента ──────────────────────────────────────────────────────
 
 export function Dashboard() {
+  const t = useT(dashboardMessages);
+  const tFinance = useT(financeMessages);
+  const labelOf = useCategoryLabel();
   const { data: records, loading: recordsLoading, error: recordsError } = useRecordList();
   const {
     data: categories,
@@ -182,7 +189,8 @@ export function Dashboard() {
   );
 
   function catName(id: string): string {
-    return categories.find((c) => c.id === id)?.name ?? "—";
+    const category = categories.find((c) => c.id === id);
+    return category ? labelOf(category) : "—";
   }
 
   const hasFilters = typeFilter !== "Сви" || categoryFilter !== "све";
@@ -193,17 +201,17 @@ export function Dashboard() {
       {loadError ? (
         <div className="empty-state" role="alert">
           <span className="empty-icon">⚠️</span>
-          <p>Грешка при учитавању података. Проверите приступ и покушајте поново.</p>
+          <p>{t("dashboard.loadError")}</p>
         </div>
       ) : loading ? (
         <div className="empty-state">
           <span className="empty-icon">⏳</span>
-          <p>Учитавање…</p>
+          <p>{t("dashboard.loading")}</p>
         </div>
       ) : totalCurrencies.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">💰</span>
-          <p>Нема записа. Додајте први унос.</p>
+          <p>{t("dashboard.empty")}</p>
         </div>
       ) : (
         totalCurrencies.map((cur) => (
@@ -214,51 +222,51 @@ export function Dashboard() {
       {/* ── Период + филтери ── */}
       <div className="card">
         <div className="card-title-row">
-          <p className="section-title">Трансакције</p>
+          <p className="section-title">{t("dashboard.transactions")}</p>
           <button
             className="ghost"
             onClick={() => setReportOpen(true)}
             disabled={loading || Boolean(loadError) || records.length === 0}
           >
-            📄 Извештај
+            📄 {t("dashboard.report")}
           </button>
         </div>
         <div className="period-tabs">
-          {PERIODS.map((p) => (
+          {PERIOD_TABS.map((id) => (
             <button
-              key={p.id}
-              className={`period-tab ${period === p.id ? "active" : ""}`}
-              onClick={() => setPeriod(p.id)}
+              key={id}
+              className={`period-tab ${period === id ? "active" : ""}`}
+              onClick={() => setPeriod(id)}
             >
-              {p.label}
+              {tFinance(PERIOD_PRESET_KEYS[id])}
             </button>
           ))}
         </div>
 
         <details className="filter-details">
           <summary className={`filter-summary ${hasFilters ? "has-filters" : ""}`}>
-            <span>Филтери</span>
+            <span>{t("dashboard.filters")}</span>
             {hasFilters && <span className="filter-badge">●</span>}
           </summary>
           <div className="filter-body">
             <label className="filter-label">
-              Тип
+              {t("dashboard.filter.type")}
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value as RecordType | "Сви")}
               >
-                <option value="Сви">Сви</option>
-                <option value="Приход">Приход</option>
-                <option value="Расход">Расход</option>
+                <option value="Сви">{t("dashboard.filter.all")}</option>
+                <option value="Приход">{tFinance(RECORD_TYPE_KEYS["Приход"])}</option>
+                <option value="Расход">{tFinance(RECORD_TYPE_KEYS["Расход"])}</option>
               </select>
             </label>
             <label className="filter-label">
-              Категорија
+              {t("dashboard.filter.category")}
               <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                <option value="све">Све</option>
+                <option value="све">{t("dashboard.filter.all")}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} ({c.type})
+                    {labelOf(c)} ({tFinance(RECORD_TYPE_KEYS[c.type])})
                   </option>
                 ))}
               </select>
@@ -267,7 +275,7 @@ export function Dashboard() {
         </details>
 
         {recent.length === 0 ? (
-          <p className="empty-inline">Нема трансакција за изабрани период.</p>
+          <p className="empty-inline">{t("dashboard.emptyPeriod")}</p>
         ) : (
           <div className="recent-list">
             {recent.map((r) => (

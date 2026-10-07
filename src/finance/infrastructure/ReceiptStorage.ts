@@ -11,13 +11,13 @@ import {
   listAll,
 } from "firebase/storage";
 import { firebaseApp } from "@shared/infrastructure/firebase";
+import { ReceiptValidationError } from "@finance/domain/ReceiptValidationError";
 
 const storage = getStorage(firebaseApp);
 
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB, усклађено са storage.rules
+const MAX_SIZE_MB = 10; // усклађено са storage.rules
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
-
-export class ReceiptValidationError extends Error {}
 
 const EXTENSION_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
@@ -39,10 +39,10 @@ function resolveContentType(file: File): string {
 
 function assertValid(file: File): void {
   if (!ALLOWED_TYPES.includes(resolveContentType(file))) {
-    throw new ReceiptValidationError("Дозвољени формати: JPEG, PNG, WEBP, HEIC.");
+    throw new ReceiptValidationError({ code: "unsupportedFormat" });
   }
   if (file.size > MAX_SIZE_BYTES) {
-    throw new ReceiptValidationError("Слика не сме бити већа од 10MB.");
+    throw new ReceiptValidationError({ code: "tooLarge", maxMb: MAX_SIZE_MB });
   }
 }
 

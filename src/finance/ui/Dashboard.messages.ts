@@ -1,0 +1,36 @@
+import { defineMessages } from "@shared/i18n/messages";
+
+export const dashboardMessages = defineMessages({
+  sr: {
+    "dashboard.free": "Слободно",
+    "dashboard.allocated": "Алоцирано",
+    "dashboard.income": "Приходи",
+    "dashboard.expenses": "Расходи",
+    "dashboard.transactions": "Трансакције",
+    "dashboard.report": "Извештај",
+    "dashboard.filters": "Филтери",
+    "dashboard.filter.type": "Тип",
+    "dashboard.filter.category": "Категорија",
+    "dashboard.filter.all": "Све",
+    "dashboard.loading": "Учитавање…",
+    "dashboard.loadError": "Грешка при учитавању података. Проверите приступ и покушајте поново.",
+    "dashboard.empty": "Нема записа. Додајте први унос.",
+    "dashboard.emptyPeriod": "Нема трансакција за изабрани период.",
+  },
+  en: {
+    "dashboard.free": "Free",
+    "dashboard.allocated": "Allocated",
+    "dashboard.income": "Income",
+    "dashboard.expenses": "Expenses",
+    "dashboard.transactions": "Transactions",
+    "dashboard.report": "Report",
+    "dashboard.filters": "Filters",
+    "dashboard.filter.type": "Type",
+    "dashboard.filter.category": "Category",
+    "dashboard.filter.all": "All",
+    "dashboard.loading": "Loading…",
+    "dashboard.loadError": "Could not load data. Check your access and try again.",
+    "dashboard.empty": "No records yet. Add your first entry.",
+    "dashboard.emptyPeriod": "No transactions for the selected period.",
+  },
+});

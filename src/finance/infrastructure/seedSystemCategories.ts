@@ -1,6 +1,7 @@
 // Infrastructure: Иницијализација системских категорија.
 // Позива се при пријави Admin корисника (видети AuthContext.tsx).
 // Идемпотентно — не мења ништа ако документи већ постоје.
+// `name` је језички неутралан резервни назив; приказ се преводи по ID-у (categoryLabel.ts).
 
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@shared/infrastructure/firebase";
@@ -11,7 +12,7 @@ interface SystemCategoryDef {
   type: "Приход" | "Расход";
 }
 
-const SYSTEM_CATEGORIES: SystemCategoryDef[] = [
+export const SYSTEM_CATEGORIES: readonly SystemCategoryDef[] = [
   { id: "system-unknown-income", name: "Непознато", type: "Приход" },
   { id: "system-unknown-expense", name: "Непознато", type: "Расход" },
 ];

@@ -3,9 +3,14 @@
 import { useId, useState } from "react";
 import { addCategory, editCategory } from "@finance/application/categoryService";
 import { useCategoryList } from "@finance/application/useCategoryList";
+import { useCategoryLabel } from "@finance/application/useCategoryLabel";
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Category, RecordType } from "@finance/domain/Category";
 import type { Role } from "@identity/domain/User";
+import { useT } from "@shared/i18n/I18nProvider";
+import { sharedMessages } from "@shared/ui/messages";
+import { categoryMessages } from "@finance/ui/CategoryList.messages";
+import { financeMessages, RECORD_TYPE_KEYS } from "@finance/ui/finance.messages";
 
 interface Props {
   role: Role;
@@ -13,13 +18,17 @@ interface Props {
 
 const MAX_NAME_LENGTH = 40;
 
-const TYPE_SECTIONS: { type: RecordType; label: string; accent: string }[] = [
-  { type: "Приход", label: "Приходи", accent: "income" },
-  { type: "Расход", label: "Расходи", accent: "expense" },
-];
+const TYPE_SECTIONS = [
+  { type: "Приход", labelKey: "categories.section.income", accent: "income" },
+  { type: "Расход", labelKey: "categories.section.expense", accent: "expense" },
+] as const satisfies readonly { type: RecordType; labelKey: string; accent: string }[];
 
 export function CategoryList({ role }: Props) {
   const uid = useId();
+  const t = useT(categoryMessages);
+  const tf = useT(financeMessages);
+  const tShared = useT(sharedMessages);
+  const labelOf = useCategoryLabel();
   const { data: categories } = useCategoryList();
   const isAdmin = role === "Admin";
 
@@ -38,14 +47,17 @@ export function CategoryList({ role }: Props) {
 
   /** Враћа поруку о грешци или "" ако је назив валидан (дупликат се проверава по типу, без разлике у величини слова). */
   function validateName(name: string, type: RecordType, excludeId?: string): string {
-    if (!name) return "Назив је обавезан.";
+    if (!name) return t("categories.error.nameRequired");
     if (name.length > MAX_NAME_LENGTH)
-      return `Назив може имати највише ${MAX_NAME_LENGTH} знакова.`;
+      return t("categories.error.nameTooLong", { max: MAX_NAME_LENGTH });
     const key = name.toLocaleLowerCase("sr");
     const duplicate = categories.some(
-      (c) => c.id !== excludeId && c.type === type && c.name.trim().toLocaleLowerCase("sr") === key,
+      (c) =>
+        c.id !== excludeId &&
+        c.type === type &&
+        [c.name, labelOf(c)].some((n) => n.trim().toLocaleLowerCase("sr") === key),
     );
-    return duplicate ? "Категорија са тим називом већ постоји." : "";
+    return duplicate ? t("categories.error.duplicate") : "";
   }
 
   /** Једна тачка за in-flight стање и хватање грешака; спречава двоструки клик. */
@@ -57,7 +69,7 @@ export function CategoryList({ role }: Props) {
       await action();
       return true;
     } catch {
-      setActionError("Операција није успела. Покушајте поново.");
+      setActionError(t("categories.error.actionFailed"));
       return false;
     } finally {
       setBusy(false);
@@ -116,13 +128,13 @@ export function CategoryList({ role }: Props) {
       )}
 
       {/* ── Accordion по типу ── */}
-      {TYPE_SECTIONS.map(({ type, label, accent }) => {
+      {TYPE_SECTIONS.map(({ type, labelKey, accent }) => {
         const list = categories.filter((c) => c.type === type);
         return (
           <details key={type} className="cat-section" open>
             <summary className="cat-section-header">
               <span className={`cat-section-dot ${accent}-dot`} />
-              <span className="cat-section-label">{label}</span>
+              <span className="cat-section-label">{t(labelKey)}</span>
               <span className="cat-section-count">{list.filter((c) => c.active).length}</span>
             </summary>
 
@@ -144,7 +156,7 @@ export function CategoryList({ role }: Props) {
                       />
                       <button
                         className="chip-action-btn"
-                        aria-label="Сачувај"
+                        aria-label={t("categories.save")}
                         disabled={busy}
                         onClick={() => handleEditSave(cat)}
                       >
@@ -152,7 +164,7 @@ export function CategoryList({ role }: Props) {
                       </button>
                       <button
                         className="chip-action-btn"
-                        aria-label="Откажи"
+                        aria-label={tShared("confirm.cancel")}
                         disabled={busy}
                         onClick={() => setEditId(null)}
                       >
@@ -161,14 +173,16 @@ export function CategoryList({ role }: Props) {
                     </div>
                   ) : (
                     <div className="cat-chip-view">
-                      <span className="cat-chip-name">{cat.name}</span>
-                      {!cat.active && <span className="cat-chip-badge">неактивна</span>}
+                      <span className="cat-chip-name">{labelOf(cat)}</span>
+                      {!cat.active && (
+                        <span className="cat-chip-badge">{t("categories.inactive")}</span>
+                      )}
                       {isAdmin && !cat.system && !cat.active && (
                         <div className="cat-chip-actions">
                           <button
                             className="chip-action-btn"
-                            title="Поново активирај"
-                            aria-label="Поново активирај"
+                            title={t("categories.reactivate")}
+                            aria-label={t("categories.reactivate")}
                             disabled={busy}
                             onClick={() => handleReactivate(cat)}
                           >
@@ -180,8 +194,8 @@ export function CategoryList({ role }: Props) {
                         <div className="cat-chip-actions">
                           <button
                             className="chip-action-btn"
-                            title="Уреди"
-                            aria-label="Уреди"
+                            title={t("categories.edit")}
+                            aria-label={t("categories.edit")}
                             onClick={() => {
                               setEditId(cat.id);
                               setEditName(cat.name);
@@ -191,8 +205,8 @@ export function CategoryList({ role }: Props) {
                           </button>
                           <button
                             className="chip-action-btn danger"
-                            title="Деактивирај"
-                            aria-label="Деактивирај"
+                            title={t("categories.deactivate")}
+                            aria-label={t("categories.deactivate")}
                             onClick={() => setPendingDeactivate(cat)}
                           >
                             ✕
@@ -215,29 +229,29 @@ export function CategoryList({ role }: Props) {
             className={`form-toggle ${formOpen ? "open" : ""}`}
             onClick={() => setFormOpen((v) => !v)}
           >
-            <span>{formOpen ? "✕  Затвори" : "+ Нова категорија"}</span>
+            <span>{formOpen ? t("categories.close") : t("categories.new")}</span>
           </button>
 
           {formOpen && (
             <div className="cat-form">
               <div className="form-type-row">
-                {(["Приход", "Расход"] as RecordType[]).map((t) => (
+                {(["Приход", "Расход"] as RecordType[]).map((kind) => (
                   <button
-                    key={t}
-                    className={`type-btn ${newType === t ? (t === "Приход" ? "income-active" : "expense-active") : ""}`}
-                    onClick={() => setNewType(t)}
+                    key={kind}
+                    className={`type-btn ${newType === kind ? (kind === "Приход" ? "income-active" : "expense-active") : ""}`}
+                    onClick={() => setNewType(kind)}
                   >
-                    {t === "Приход" ? "↑ Приход" : "↓ Расход"}
+                    {`${kind === "Приход" ? "↑" : "↓"} ${tf(RECORD_TYPE_KEYS[kind])}`}
                   </button>
                 ))}
               </div>
               <div className="form-field">
                 <label className="field-label" htmlFor={`${uid}-1`}>
-                  Назив категорије
+                  {t("categories.field.name")}
                 </label>
                 <input
                   id={`${uid}-1`}
-                  placeholder="Нпр. Закупнина"
+                  placeholder={t("categories.placeholder.name")}
                   value={newName}
                   maxLength={MAX_NAME_LENGTH}
                   onChange={(e) => setNewName(e.target.value)}
@@ -249,7 +263,7 @@ export function CategoryList({ role }: Props) {
               {formError && <p className="error-text">{formError}</p>}
               <div className="form-actions">
                 <button className="primary" disabled={busy} onClick={handleCreate}>
-                  Додај
+                  {t("categories.add")}
                 </button>
               </div>
             </div>
@@ -259,9 +273,9 @@ export function CategoryList({ role }: Props) {
 
       <ConfirmDialog
         open={pendingDeactivate !== null}
-        title={`Деактивирај „${pendingDeactivate?.name ?? ""}“?`}
-        message="Категорија више неће бити понуђена при уносу нових записа. Постојећи записи остају нетакнути — ово не брише историју."
-        confirmLabel="Деактивирај"
+        title={t("categories.deactivate.title", { name: pendingDeactivate?.name ?? "" })}
+        message={t("categories.deactivate.message")}
+        confirmLabel={t("categories.deactivate")}
         onConfirm={confirmDeactivate}
         onCancel={() => setPendingDeactivate(null)}
       />

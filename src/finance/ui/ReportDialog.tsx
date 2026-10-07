@@ -6,25 +6,23 @@ import type { Category } from "@finance/domain/Category";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { Fund } from "@finance/domain/Fund";
 import { periodBounds, periodFromDayInputs, toDayInput, type Period } from "@finance/domain/Period";
+import { useLocale, useT } from "@shared/i18n/I18nProvider";
+import { sharedMessages } from "@shared/ui/messages";
+import { reportMessages } from "@finance/ui/ReportDialog.messages";
+import { financeMessages, PERIOD_PRESET_KEYS } from "@finance/ui/finance.messages";
 
-type Range = "овај месец" | "ова година" | "све" | "прилагођено";
+const CUSTOM_RANGE = "прилагођено";
 
-const RANGES: { id: Range; label: string }[] = [
-  { id: "овај месец", label: "Месец" },
-  { id: "ова година", label: "Година" },
-  { id: "све", label: "Све" },
-  { id: "прилагођено", label: "Период" },
-];
+type Range = "овај месец" | "ова година" | "све" | typeof CUSTOM_RANGE;
 
-const INVALID_PERIOD_MESSAGE = "Унесите исправан период: почетни датум не сме бити после крајњег.";
-const GENERIC_ERROR_MESSAGE = "Извештај није направљен. Покушајте поново.";
+const RANGES: Range[] = ["овај месец", "ова година", "све", CUSTOM_RANGE];
 
-type Resolved = { ok: true; period: Period | null } | { ok: false; error: string };
+type Resolved = { ok: true; period: Period | null } | { ok: false };
 
 function resolveRange(range: Range, firstDay: string, lastDay: string): Resolved {
-  if (range !== "прилагођено") return { ok: true, period: periodBounds(range) };
+  if (range !== CUSTOM_RANGE) return { ok: true, period: periodBounds(range) };
   const period = periodFromDayInputs(firstDay, lastDay);
-  return period ? { ok: true, period } : { ok: false, error: INVALID_PERIOD_MESSAGE };
+  return period ? { ok: true, period } : { ok: false };
 }
 
 interface Props {
@@ -36,6 +34,10 @@ interface Props {
 
 export function ReportDialog({ records, categories, funds, onClose }: Props) {
   const uid = useId();
+  const { locale } = useLocale();
+  const t = useT(reportMessages);
+  const tf = useT(financeMessages);
+  const tShared = useT(sharedMessages);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [range, setRange] = useState<Range>("овај месец");
   const [firstDay, setFirstDay] = useState(() => {
@@ -58,16 +60,16 @@ export function ReportDialog({ records, categories, funds, onClose }: Props) {
   async function handleGenerate() {
     const resolved = resolveRange(range, firstDay, lastDay);
     if (!resolved.ok) {
-      setError(resolved.error);
+      setError(t("report.error.invalidPeriod"));
       return;
     }
     setBusy(true);
     setError("");
     try {
-      await exportReportPdf(records, categories, funds, resolved.period);
+      await exportReportPdf(records, categories, funds, resolved.period, locale);
       onClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : GENERIC_ERROR_MESSAGE);
+    } catch {
+      setError(t("report.error.generic"));
       setBusy(false);
     }
   }
@@ -89,31 +91,28 @@ export function ReportDialog({ records, categories, funds, onClose }: Props) {
         aria-labelledby={`${uid}-title`}
       >
         <p id={`${uid}-title`} className="confirm-title">
-          Извештај
+          {t("report.title")}
         </p>
-        <p className="confirm-message">
-          PDF са почетним и крајњим стањем, графиконом салда, збировима по категоријама и свим
-          трансакцијама изабраног периода.
-        </p>
+        <p className="confirm-message">{t("report.description")}</p>
 
-        <div className="period-tabs" role="group" aria-label="Период извештаја">
-          {RANGES.map((r) => (
+        <div className="period-tabs" role="group" aria-label={t("report.range.label")}>
+          {RANGES.map((id) => (
             <button
-              key={r.id}
-              className={`period-tab ${range === r.id ? "active" : ""}`}
-              aria-pressed={range === r.id}
-              onClick={() => setRange(r.id)}
+              key={id}
+              className={`period-tab ${range === id ? "active" : ""}`}
+              aria-pressed={range === id}
+              onClick={() => setRange(id)}
             >
-              {r.label}
+              {id === CUSTOM_RANGE ? t("report.range.custom") : tf(PERIOD_PRESET_KEYS[id])}
             </button>
           ))}
         </div>
 
-        {range === "прилагођено" && (
+        {range === CUSTOM_RANGE && (
           <div className="form-row">
             <div className="form-field form-field--grow">
               <label className="field-label" htmlFor={`${uid}-from`}>
-                Од
+                {t("report.field.from")}
               </label>
               <input
                 id={`${uid}-from`}
@@ -124,7 +123,7 @@ export function ReportDialog({ records, categories, funds, onClose }: Props) {
             </div>
             <div className="form-field form-field--grow">
               <label className="field-label" htmlFor={`${uid}-to`}>
-                До
+                {t("report.field.to")}
               </label>
               <input
                 id={`${uid}-to`}
@@ -144,10 +143,10 @@ export function ReportDialog({ records, categories, funds, onClose }: Props) {
 
         <div className="form-actions">
           <button className="primary" onClick={handleGenerate} disabled={busy}>
-            {busy ? "Прављење…" : "Направи PDF"}
+            {busy ? t("report.generating") : t("report.generate")}
           </button>
           <button className="ghost" onClick={onClose} disabled={busy}>
-            Откажи
+            {tShared("confirm.cancel")}
           </button>
         </div>
       </div>

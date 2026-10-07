@@ -1,0 +1,46 @@
+import { defineMessages } from "@shared/i18n/messages";
+
+export const categoryMessages = defineMessages({
+  sr: {
+    "categories.section.income": "Приходи",
+    "categories.section.expense": "Расходи",
+    "categories.inactive": "неактивна",
+    "categories.edit": "Уреди",
+    "categories.save": "Сачувај",
+    "categories.deactivate": "Деактивирај",
+    "categories.reactivate": "Поново активирај",
+    "categories.new": "+ Нова категорија",
+    "categories.close": "✕  Затвори",
+    "categories.field.name": "Назив категорије",
+    "categories.placeholder.name": "Нпр. Закупнина",
+    "categories.add": "Додај",
+    "categories.error.nameRequired": "Назив је обавезан.",
+    "categories.error.nameTooLong": "Назив може имати највише {max} знакова.",
+    "categories.error.duplicate": "Категорија са тим називом већ постоји.",
+    "categories.error.actionFailed": "Операција није успела. Покушајте поново.",
+    "categories.deactivate.title": "Деактивирај „{name}“?",
+    "categories.deactivate.message":
+      "Категорија више неће бити понуђена при уносу нових записа. Постојећи записи остају нетакнути — ово не брише историју.",
+  },
+  en: {
+    "categories.section.income": "Income",
+    "categories.section.expense": "Expenses",
+    "categories.inactive": "inactive",
+    "categories.edit": "Edit",
+    "categories.save": "Save",
+    "categories.deactivate": "Deactivate",
+    "categories.reactivate": "Reactivate",
+    "categories.new": "+ New category",
+    "categories.close": "✕  Close",
+    "categories.field.name": "Category name",
+    "categories.placeholder.name": "E.g. Rent",
+    "categories.add": "Add",
+    "categories.error.nameRequired": "Name is required.",
+    "categories.error.nameTooLong": "Name can be at most {max} characters.",
+    "categories.error.duplicate": "A category with this name already exists.",
+    "categories.error.actionFailed": "The operation failed. Try again.",
+    "categories.deactivate.title": "Deactivate “{name}”?",
+    "categories.deactivate.message":
+      "The category will no longer be offered when entering new records. Existing records are untouched — this does not delete history.",
+  },
+});

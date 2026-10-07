@@ -4,13 +4,11 @@ import {
   COLOR,
   CONTENT_WIDTH,
   PAGE,
-  fmtAmount,
-  fmtDate,
-  fmtTime,
   setText,
   type Cursor,
   type Rgb,
 } from "@finance/infrastructure/reportPdfCommon";
+import type { PdfContext } from "@finance/infrastructure/reportPdfContext";
 
 const LINE_HEIGHT = 3.9;
 const ROW_PADDING = 2.4;
@@ -56,53 +54,66 @@ function drawTotalRow(doc: jsPDF, cursor: Cursor, label: string, amount: string,
   cursor.y += height;
 }
 
-export function drawCategoryTotals(doc: jsPDF, cursor: Cursor, report: CurrencyReport): void {
+export function drawCategoryTotals(
+  doc: jsPDF,
+  cursor: Cursor,
+  report: CurrencyReport,
+  ctx: PdfContext,
+): void {
   const sections = [
-    { type: "Приход", title: "Приходи по категоријама", color: COLOR.income },
-    { type: "Расход", title: "Расходи по категоријама", color: COLOR.expense },
+    { type: "Приход", title: ctx.t("pdf.totals.income"), color: COLOR.income },
+    { type: "Расход", title: ctx.t("pdf.totals.expense"), color: COLOR.expense },
   ] as const;
   for (const { type, title, color } of sections) {
     const totals = report.categoryTotals.filter((t) => t.type === type);
     if (totals.length === 0) continue;
     drawSubheading(doc, cursor, title);
     for (const t of totals) {
-      drawTotalRow(doc, cursor, t.categoryName, fmtAmount(t.total, report.currency), color);
+      drawTotalRow(doc, cursor, t.categoryName, ctx.amount(t.total, report.currency), color);
     }
     cursor.y += 4;
   }
 }
 
-function drawTableHeader(doc: jsPDF, cursor: Cursor): void {
+function drawTableHeader(doc: jsPDF, cursor: Cursor, ctx: PdfContext): void {
   doc.setFillColor(...COLOR.headerFill);
   doc.rect(PAGE.margin, cursor.y, CONTENT_WIDTH, HEADER_HEIGHT, "F");
   setText(doc, 8, COLOR.muted, true);
   const baseline = cursor.y + 4.4;
-  doc.text("Датум и време", PAGE.margin + COLUMN.date + 1, baseline);
-  doc.text("Категорија", PAGE.margin + COLUMN.category, baseline);
-  doc.text("Контрагент", PAGE.margin + COLUMN.party, baseline);
-  doc.text("Износ", PAGE.margin + CONTENT_WIDTH - 1, baseline, { align: "right" });
+  doc.text(ctx.t("pdf.table.dateTime"), PAGE.margin + COLUMN.date + 1, baseline);
+  doc.text(ctx.t("pdf.table.category"), PAGE.margin + COLUMN.category, baseline);
+  doc.text(ctx.t("pdf.table.counterparty"), PAGE.margin + COLUMN.party, baseline);
+  doc.text(ctx.t("pdf.table.amount"), PAGE.margin + CONTENT_WIDTH - 1, baseline, {
+    align: "right",
+  });
   cursor.y += HEADER_HEIGHT;
 }
 
-function detailText(entry: ReportEntry): string {
-  const fund = entry.fundName ? `Фонд: ${entry.fundName}` : "";
+function detailText(entry: ReportEntry, ctx: PdfContext): string {
+  const fund = entry.fundName ? ctx.t("pdf.table.fund", { name: entry.fundName }) : "";
   return [entry.record.description, fund].filter(Boolean).join(" · ");
 }
 
-function drawEntryRow(doc: jsPDF, cursor: Cursor, entry: ReportEntry, currency: string): void {
+function drawEntryRow(
+  doc: jsPDF,
+  cursor: Cursor,
+  entry: ReportEntry,
+  currency: string,
+  ctx: PdfContext,
+): void {
   const { record } = entry;
   setText(doc, 8, COLOR.text, true);
   const partyLines = wrap(doc, record.counterparty, COLUMN_WIDTH.party);
   setText(doc, 8, COLOR.text);
   const categoryLines = wrap(doc, entry.categoryName, COLUMN_WIDTH.category);
-  const detailLines = wrap(doc, detailText(entry), COLUMN_WIDTH.party);
+  const detailLines = wrap(doc, detailText(entry, ctx), COLUMN_WIDTH.party);
   const lineCount = Math.max(categoryLines.length, partyLines.length + detailLines.length, 1);
   const height = lineCount * LINE_HEIGHT + ROW_PADDING;
-  cursor.ensure(height, () => drawTableHeader(doc, cursor));
+  cursor.ensure(height, () => drawTableHeader(doc, cursor, ctx));
 
   const baseline = cursor.y + TEXT_BASELINE + ROW_PADDING / 2;
   setText(doc, 8, COLOR.text);
-  const when = `${fmtDate(record.dateTime)} ${fmtTime(record.dateTime)}`;
+  const when = `${ctx.date(record.dateTime)} ${ctx.time(record.dateTime)}`;
   doc.text(when, PAGE.margin + COLUMN.date + 1, baseline);
   drawLines(doc, categoryLines, PAGE.margin + COLUMN.category, baseline);
   setText(doc, 8, COLOR.text, true);
@@ -114,29 +125,40 @@ function drawEntryRow(doc: jsPDF, cursor: Cursor, entry: ReportEntry, currency: 
     PAGE.margin + COLUMN.party,
     baseline + partyLines.length * LINE_HEIGHT,
   );
-  drawEntryAmount(doc, entry, currency, baseline);
+  drawEntryAmount(doc, entry, currency, baseline, ctx);
   drawRowBorder(doc, cursor.y + height);
   cursor.y += height;
 }
 
-function drawEntryAmount(doc: jsPDF, entry: ReportEntry, currency: string, y: number): void {
+function drawEntryAmount(
+  doc: jsPDF,
+  entry: ReportEntry,
+  currency: string,
+  y: number,
+  ctx: PdfContext,
+): void {
   const { type, amount } = entry.record;
   const isIncome = type === "Приход";
   setText(doc, 8.5, isIncome ? COLOR.income : COLOR.expense, true);
-  const text = `${isIncome ? SIGN.income : SIGN.expense}${fmtAmount(amount.value, currency)}`;
+  const text = `${isIncome ? SIGN.income : SIGN.expense}${ctx.amount(amount.value, currency)}`;
   doc.text(text, PAGE.margin + CONTENT_WIDTH - 1, y, { align: "right" });
 }
 
-export function drawTransactions(doc: jsPDF, cursor: Cursor, report: CurrencyReport): void {
-  drawSubheading(doc, cursor, "Трансакције");
+export function drawTransactions(
+  doc: jsPDF,
+  cursor: Cursor,
+  report: CurrencyReport,
+  ctx: PdfContext,
+): void {
+  drawSubheading(doc, cursor, ctx.t("pdf.table.title"));
   cursor.ensure(HEADER_HEIGHT + LINE_HEIGHT + ROW_PADDING);
-  drawTableHeader(doc, cursor);
+  drawTableHeader(doc, cursor, ctx);
   for (const entry of report.entries) {
-    drawEntryRow(doc, cursor, entry, report.currency);
+    drawEntryRow(doc, cursor, entry, report.currency, ctx);
   }
   if (report.entries.length === 0) {
     setText(doc, 9, COLOR.muted);
-    doc.text("Нема трансакција у изабраном периоду.", PAGE.margin + 1, cursor.y + 5);
+    doc.text(ctx.t("pdf.table.empty"), PAGE.margin + 1, cursor.y + 5);
     cursor.y += 8;
   }
 }

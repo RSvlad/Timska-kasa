@@ -12,6 +12,7 @@ import {
 import { db } from "@shared/infrastructure/firebase";
 import { omitUndefined } from "@shared/infrastructure/omitUndefined";
 import type { Fund } from "@finance/domain/Fund";
+import { FundError } from "@finance/domain/FundError";
 import type { Amount } from "@finance/domain/Amount";
 
 const COLLECTION = "funds";
@@ -71,17 +72,21 @@ export async function adjustFundReserved(id: string, delta: number): Promise<voi
   const ref = doc(db, COLLECTION, id);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error("Фонд не постоји.");
+    if (!snap.exists()) throw new FundError({ code: "notFound" });
     const data = snap.data() as Pick<FundDoc, "reserved" | "capacity">;
+    const { currency, value: capacity } = data.capacity;
     const next = data.reserved + delta;
-    if (next < 0)
-      throw new Error(
-        `Не може се дезалоцирати ${-delta} — тренутно алоцирано само ${data.reserved} ${data.capacity.currency}.`,
-      );
-    if (next > data.capacity.value)
-      throw new Error(
-        `Прелази капацитет фонда (макс. ${data.capacity.value - data.reserved} ${data.capacity.currency}).`,
-      );
+    if (next < 0) {
+      throw new FundError({
+        code: "insufficientReserved",
+        requested: -delta,
+        reserved: data.reserved,
+        currency,
+      });
+    }
+    if (next > capacity) {
+      throw new FundError({ code: "capacityExceeded", max: capacity - data.reserved, currency });
+    }
     tx.update(ref, { reserved: next });
   });
 }
@@ -99,17 +104,15 @@ export async function updateFund(
   // Транзакција: инваријанте се проверавају над свежим стањем документа.
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error("Фонд не постоји.");
+    if (!snap.exists()) throw new FundError({ code: "notFound" });
     const cur = snap.data() as Pick<FundDoc, "reserved" | "capacity">;
+    const { reserved } = cur;
     if (patch.capacity) {
-      if (patch.capacity.currency !== cur.capacity.currency && cur.reserved > 0)
-        throw new Error(
-          `Валута се не може мењати док је у фонду алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај.`,
-        );
-      if (patch.capacity.value < cur.reserved)
-        throw new Error(
-          `Капацитет не може бити мањи од алоцираног износа (${cur.reserved} ${cur.capacity.currency}).`,
-        );
+      const currency = cur.capacity.currency;
+      if (patch.capacity.currency !== currency && reserved > 0)
+        throw new FundError({ code: "currencyLocked", reserved, currency });
+      if (patch.capacity.value < reserved)
+        throw new FundError({ code: "capacityBelowReserved", reserved, currency });
     }
     tx.update(ref, data);
   });
@@ -123,10 +126,10 @@ export async function deleteFund(id: string): Promise<void> {
     const snap = await tx.get(ref);
     if (!snap.exists()) return;
     const cur = snap.data() as Pick<FundDoc, "reserved" | "capacity">;
-    if (cur.reserved > 0)
-      throw new Error(
-        `Фонд има алоцирано ${cur.reserved} ${cur.capacity.currency}. Прво дезалоцирај средства.`,
-      );
+    if (cur.reserved > 0) {
+      const { reserved, capacity } = cur;
+      throw new FundError({ code: "hasReserved", reserved, currency: capacity.currency });
+    }
     tx.delete(ref);
   });
 }

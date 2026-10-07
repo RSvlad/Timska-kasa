@@ -1,6 +1,7 @@
 import type { jsPDF } from "jspdf";
 import type { BalancePoint } from "@finance/domain/Report";
 import { COLOR, setText } from "@finance/infrastructure/reportPdfCommon";
+import type { PdfContext } from "@finance/infrastructure/reportPdfContext";
 
 const DAY_MS = 86_400_000;
 const GRID_INTERVALS = 4;
@@ -68,7 +69,7 @@ function createScale(area: ChartArea, series: readonly BalancePoint[], span: Cha
   };
 }
 
-function drawYAxis(doc: jsPDF, s: Scale): void {
+function drawYAxis(doc: jsPDF, s: Scale, ctx: PdfContext): void {
   const fractionDigits = s.yMax - s.yMin < SMALL_RANGE ? 2 : 0;
   doc.setLineWidth(GRID_LINE_WIDTH);
   doc.setDrawColor(...COLOR.grid);
@@ -77,7 +78,7 @@ function drawYAxis(doc: jsPDF, s: Scale): void {
     const value = s.yMin + ((s.yMax - s.yMin) * i) / GRID_INTERVALS;
     const y = s.y(value);
     doc.line(s.left, y, s.right, y);
-    const label = value.toLocaleString("sr-RS", { maximumFractionDigits: fractionDigits });
+    const label = ctx.number(value, fractionDigits);
     doc.text(label, s.left - 1.5, y + 1, { align: "right" });
   }
 }
@@ -90,11 +91,11 @@ function drawZeroLine(doc: jsPDF, s: Scale): void {
   doc.setLineDashPattern([], 0);
 }
 
-function drawXAxis(doc: jsPDF, s: Scale): void {
+function drawXAxis(doc: jsPDF, s: Scale, ctx: PdfContext): void {
   setText(doc, 7, COLOR.muted);
   for (let i = 0; i <= X_TICK_INTERVALS; i++) {
     const time = s.xMin + ((s.xMax - s.xMin) * i) / X_TICK_INTERVALS;
-    const label = new Date(time).toLocaleDateString("sr-RS", { day: "2-digit", month: "2-digit" });
+    const label = ctx.dayMonth(new Date(time));
     const align = i === 0 ? "left" : i === X_TICK_INTERVALS ? "right" : "center";
     doc.text(label, s.x(time), s.bottom + 4.5, { align });
   }
@@ -129,11 +130,12 @@ export function drawBalanceChart(
   area: ChartArea,
   series: readonly BalancePoint[],
   span: ChartSpan,
+  ctx: PdfContext,
 ): void {
   const scale = createScale(area, series, span);
-  drawYAxis(doc, scale);
+  drawYAxis(doc, scale, ctx);
   drawZeroLine(doc, scale);
   drawSteps(doc, scale, series);
   drawMarkers(doc, scale, series);
-  drawXAxis(doc, scale);
+  drawXAxis(doc, scale, ctx);
 }

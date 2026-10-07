@@ -6,23 +6,32 @@ import {
   uploadReceipt,
   deleteReceipt,
   deleteReceiptObject,
-  ReceiptValidationError,
 } from "@finance/infrastructure/ReceiptStorage";
+import {
+  ReceiptValidationError,
+  type ReceiptValidationDetail,
+} from "@finance/domain/ReceiptValidationError";
 import { updateFinanceRecord } from "@finance/infrastructure/FinanceRecordRepository";
+
+/** Језички неутралан опис грешке; текст гради UI слој. */
+export type ReceiptUploadError =
+  | { code: "validation"; detail: ReceiptValidationDetail }
+  | { code: "uploadFailed" }
+  | { code: "removeFailed" };
 
 interface UseReceiptUpload {
   uploading: boolean;
-  error: string;
+  error: ReceiptUploadError | null;
   attachReceipt: (recordId: string, file: File, hadPrevious?: boolean) => Promise<void>;
   removeReceipt: (recordId: string) => Promise<void>;
 }
 
 export function useReceiptUpload(): UseReceiptUpload {
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<ReceiptUploadError | null>(null);
 
   async function attachReceipt(recordId: string, file: File, hadPrevious = false) {
-    setError("");
+    setError(null);
     setUploading(true);
     try {
       // Редослед: валидација + upload нове → ажурирање записа → брисање старе.
@@ -41,8 +50,8 @@ export function useReceiptUpload(): UseReceiptUpload {
     } catch (e) {
       setError(
         e instanceof ReceiptValidationError
-          ? e.message
-          : "Слика није отпремљена. Покушајте поново.",
+          ? { code: "validation", detail: e.detail }
+          : { code: "uploadFailed" },
       );
       throw e;
     } finally {
@@ -51,13 +60,13 @@ export function useReceiptUpload(): UseReceiptUpload {
   }
 
   async function removeReceipt(recordId: string) {
-    setError("");
+    setError(null);
     setUploading(true);
     try {
       await deleteReceipt(recordId);
       await updateFinanceRecord(recordId, { receiptPath: undefined, receiptUrl: undefined });
     } catch {
-      setError("Рачун није уклоњен. Покушајте поново.");
+      setError({ code: "removeFailed" });
     } finally {
       setUploading(false);
     }

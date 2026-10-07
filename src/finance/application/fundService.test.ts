@@ -57,16 +57,22 @@ describe("reserveIntoFund", () => {
   const records = [record({ amount: { value: 80, currency: "RSD" } })];
 
   it("одбија неположиван износ", async () => {
-    await expect(reserveIntoFund(fund(), 0, records, [fund()])).rejects.toThrow();
+    await expect(reserveIntoFund(fund(), 0, records, [fund()])).rejects.toMatchObject({
+      detail: { code: "amountNotPositive" },
+    });
     expect(adjustFundReserved).not.toHaveBeenCalled();
   });
 
   it("одбија прекорачење капацитета", async () => {
-    await expect(reserveIntoFund(fund(), 101, records, [fund()])).rejects.toThrow(/капацитет/);
+    await expect(reserveIntoFund(fund(), 101, records, [fund()])).rejects.toMatchObject({
+      detail: { code: "capacityExceeded", max: 100, currency: "RSD" },
+    });
   });
 
   it("одбија алокацију веће од слободне касе", async () => {
-    await expect(reserveIntoFund(fund(), 90, records, [fund()])).rejects.toThrow(/слободн/);
+    await expect(reserveIntoFund(fund(), 90, records, [fund()])).rejects.toMatchObject({
+      detail: { code: "insufficientFreeFunds", free: 80, currency: "RSD" },
+    });
   });
 
   it("позива репозиторијум када су инваријанте задовољене", async () => {
@@ -77,7 +83,9 @@ describe("reserveIntoFund", () => {
 
 describe("releaseFromFund", () => {
   it("одбија износ већи од алокираног", async () => {
-    await expect(releaseFromFund(fund({ reserved: 10 }), 10.01)).rejects.toThrow();
+    await expect(releaseFromFund(fund({ reserved: 10 }), 10.01)).rejects.toMatchObject({
+      detail: { code: "insufficientReserved", requested: 10.01, reserved: 10 },
+    });
     expect(adjustFundReserved).not.toHaveBeenCalled();
   });
 
@@ -89,7 +97,9 @@ describe("releaseFromFund", () => {
 
 describe("removeFund", () => {
   it("одбија брисање ако га записи референцирају", async () => {
-    await expect(removeFund(fund(), [record({ fundId: "f1" })])).rejects.toThrow(/референцира/);
+    await expect(removeFund(fund(), [record({ fundId: "f1" })])).rejects.toMatchObject({
+      detail: { code: "referencedByRecords", count: 1 },
+    });
     expect(deleteFund).not.toHaveBeenCalled();
   });
 
