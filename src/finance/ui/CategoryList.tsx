@@ -7,7 +7,7 @@ import { useCategoryLabel } from "@finance/application/useCategoryLabel";
 import { ConfirmDialog } from "@shared/ui/ConfirmDialog";
 import type { Category, RecordType } from "@finance/domain/Category";
 import type { Role } from "@identity/domain/User";
-import { useT } from "@shared/i18n/I18nProvider";
+import { useLocale, useT } from "@shared/i18n/I18nProvider";
 import { sharedMessages } from "@shared/ui/messages";
 import { categoryMessages } from "@finance/ui/CategoryList.messages";
 import { financeMessages, RECORD_TYPE_KEYS } from "@finance/ui/finance.messages";
@@ -25,6 +25,7 @@ const TYPE_SECTIONS = [
 
 export function CategoryList({ role }: Props) {
   const uid = useId();
+  const { locale } = useLocale();
   const t = useT(categoryMessages);
   const tf = useT(financeMessages);
   const tShared = useT(sharedMessages);
@@ -50,12 +51,12 @@ export function CategoryList({ role }: Props) {
     if (!name) return t("categories.error.nameRequired");
     if (name.length > MAX_NAME_LENGTH)
       return t("categories.error.nameTooLong", { max: MAX_NAME_LENGTH });
-    const key = name.toLocaleLowerCase("sr");
+    const key = name.toLocaleLowerCase(locale);
     const duplicate = categories.some(
       (c) =>
         c.id !== excludeId &&
         c.type === type &&
-        [c.name, labelOf(c)].some((n) => n.trim().toLocaleLowerCase("sr") === key),
+        [c.name, labelOf(c)].some((n) => n.trim().toLocaleLowerCase(locale) === key),
     );
     return duplicate ? t("categories.error.duplicate") : "";
   }
