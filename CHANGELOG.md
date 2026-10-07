@@ -2,6 +2,14 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.6](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.5...timska-kasa-v0.0.6) (2026-10-07)
+
+
+### Features
+
+* **i18n:** format numbers, amounts and dates by selected language ([e2aa1ab](https://github.com/RSvlad/Timska-kasa/commit/e2aa1ab79752639765cb9cfec9b1454f5244e02d))
+* **i18n:** localize finance workflows ([be71d69](https://github.com/RSvlad/Timska-kasa/commit/be71d69477c109059d487bd5a4dcd4cef6d89c83))
+
 ## [0.0.5](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.4...timska-kasa-v0.0.5) (2026-10-07)
 
 
