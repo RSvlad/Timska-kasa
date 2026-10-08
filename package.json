@@ -29,6 +29,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:emulator": "firebase emulators:exec --only auth,firestore --project demo-timska-kasa \"playwright test --config playwright.emulator.config.ts\"",
+    "demo:screenshots": "firebase emulators:exec --only auth,firestore --project demo-timska-kasa \"node scripts/demo/screenshots.mjs\"",
     "test:rules": "firebase emulators:exec --only firestore,storage --project demo-timska-kasa \"vitest run --config vitest.rules.config.ts\"",
     "deploy": "npm run lint && npm test && npm run build && gh-pages -d dist"
   },

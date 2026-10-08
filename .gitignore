@@ -3,6 +3,7 @@
 /node_modules
 /dist
 /dist-e2e
+/dist-demo
 /coverage
 /playwright-report
 /test-results
@@ -24,3 +25,4 @@ Thumbs.db
 
 # Logs
 npm-debug.log*
+/docs/screenshots
