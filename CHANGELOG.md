@@ -2,6 +2,13 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.7](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.6...timska-kasa-v0.0.7) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** patch dompurify advisories ([43b550e](https://github.com/RSvlad/Timska-kasa/commit/43b550e9e3025553085a3166ef8a5719105fce0d))
+
 ## [0.0.6](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.5...timska-kasa-v0.0.6) (2026-10-07)
 
 
