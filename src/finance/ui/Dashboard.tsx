@@ -13,6 +13,7 @@ import { periodBounds, type PeriodPreset } from "@finance/domain/Period";
 import { ReportDialog } from "@finance/ui/ReportDialog";
 import { useT } from "@shared/i18n/I18nProvider";
 import { useFormatters } from "@shared/i18n/useFormatters";
+import { InstallAppButton } from "@shared/ui/InstallAppButton";
 import { dashboardMessages } from "@finance/ui/Dashboard.messages";
 import {
   financeMessages,
@@ -197,6 +198,7 @@ export function Dashboard() {
 
   return (
     <div className="db-root">
+      <InstallAppButton className="ghost install-btn install-btn-block" />
       {/* ── Новчаник картице (кумулативно) ── */}
       {loadError ? (
         <div className="empty-state" role="alert">

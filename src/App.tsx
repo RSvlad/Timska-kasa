@@ -7,6 +7,7 @@ import { FundsPage } from "@finance/ui/FundsPage";
 import { FinanceDataProvider } from "@finance/application/FinanceDataProvider";
 import { useT } from "@shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@shared/ui/LanguageSwitcher";
+import { InstallAppButton } from "@shared/ui/InstallAppButton";
 import { appMessages } from "./App.messages";
 
 type View = "dashboard" | "records" | "funds" | "categories";
@@ -58,6 +59,7 @@ export default function App() {
             </button>
           </>
         )}
+        <InstallAppButton />
         <LanguageSwitcher className="ghost lang-switch" />
       </div>
     );

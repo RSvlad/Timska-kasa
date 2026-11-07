@@ -331,6 +331,21 @@ button.ghost:hover:not(:disabled) {
   border-color: var(--border);
 }
 
+/* PWA "Инсталирај апликацију" — на почетној је приказано као пуна, уочљива акција. */
+button.install-btn-block {
+  justify-content: center;
+  width: 100%;
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  font-weight: 600;
+}
+button.install-btn-block:hover:not(:disabled) {
+  background: var(--accent-light);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
+
 button.danger-solid {
   background: var(--red);
   border-color: var(--red);

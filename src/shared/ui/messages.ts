@@ -7,6 +7,7 @@ export const sharedMessages = defineMessages({
     "error.render": "Дошло је до грешке при приказу. Освежи страницу или покушај поново.",
     "error.retry": "Покушај поново",
     "language.switchTo": "Промени језик: {language}",
+    "pwa.install": "Инсталирај апликацију",
   },
   en: {
     "confirm.confirm": "Confirm",
@@ -15,5 +16,6 @@ export const sharedMessages = defineMessages({
       "Something went wrong while displaying this page. Refresh the page or try again.",
     "error.retry": "Try again",
     "language.switchTo": "Change language: {language}",
+    "pwa.install": "Install app",
   },
 });

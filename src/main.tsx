@@ -1,4 +1,5 @@
 import "./index.css";
+import "@shared/pwa/installPrompt";
 import { resolveBrowserLocale } from "@shared/i18n/locale";
 import { defineMessages, translate } from "@shared/i18n/messages";
 
