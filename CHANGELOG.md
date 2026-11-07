@@ -2,6 +2,13 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.8](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.7...timska-kasa-v0.0.8) (2026-11-07)
+
+
+### Features
+
+* **pwa:** add install app button on home screen ([61adf1d](https://github.com/RSvlad/Timska-kasa/commit/61adf1dfc993ac7c2b42baea026bfbdf54fe29f7))
+
 ## [0.0.7](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.6...timska-kasa-v0.0.7) (2026-10-27)
 
 
