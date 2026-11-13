@@ -2,6 +2,14 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.9](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.8...timska-kasa-v0.0.9) (2026-11-13)
+
+
+### Features
+
+* **demo:** add demo login buttons for emulator mode ([d48ed84](https://github.com/RSvlad/Timska-kasa/commit/d48ed84b055c4eb6379cf0af10386e67ee2dbbac))
+* **dev:** add dev:demo script to run the app locally with seeded emulator data ([231969f](https://github.com/RSvlad/Timska-kasa/commit/231969fd9941abfbe7eae89cbe3e105ec2fcf38e))
+
 ## [0.0.8](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.7...timska-kasa-v0.0.8) (2026-11-07)
 
 
