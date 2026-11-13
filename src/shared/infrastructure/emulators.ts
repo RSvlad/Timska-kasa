@@ -15,6 +15,12 @@ declare global {
   }
 }
 
+/** Налози које креира scripts/demo/seed.mjs (само за `npm run dev:demo`). */
+export const DEMO_ACCOUNTS = {
+  admin: { email: "admin@example.com", password: "demo-password-1" },
+  viewer: { email: "viewer@example.com", password: "demo-password-2" },
+} as const;
+
 export function connectEmulators(auth: Auth, db: Firestore): void {
   connectAuthEmulator(auth, AUTH_EMULATOR_URL, { disableWarnings: true });
   connectFirestoreEmulator(db, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT);

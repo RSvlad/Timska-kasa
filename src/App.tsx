@@ -8,6 +8,7 @@ import { FinanceDataProvider } from "@finance/application/FinanceDataProvider";
 import { useT } from "@shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@shared/ui/LanguageSwitcher";
 import { InstallAppButton } from "@shared/ui/InstallAppButton";
+import { DemoLogin } from "@shared/ui/DemoLogin";
 import { appMessages } from "./App.messages";
 
 type View = "dashboard" | "records" | "funds" | "categories";
@@ -59,6 +60,7 @@ export default function App() {
             </button>
           </>
         )}
+        <DemoLogin />
         <InstallAppButton />
         <LanguageSwitcher className="ghost lang-switch" />
       </div>
