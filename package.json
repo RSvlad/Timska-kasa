@@ -19,6 +19,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:demo": "firebase emulators:exec --only auth,firestore --project demo-timska-kasa \"node scripts/demo/seed.mjs en && vite --mode demo\"",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
