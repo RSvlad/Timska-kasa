@@ -2,6 +2,13 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.10](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.9...timska-kasa-v0.0.10) (2026-11-16)
+
+
+### Features
+
+* **finance:** add debts as record-keeping (dugovi) ([50bda13](https://github.com/RSvlad/Timska-kasa/commit/50bda1340b518dcb5518ab8174ada43096f350cd))
+
 ## [0.0.9](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.8...timska-kasa-v0.0.9) (2026-11-13)
 
 
