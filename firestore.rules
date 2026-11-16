@@ -67,6 +67,30 @@ service cloud.firestore {
         && d.createdAt is timestamp;
     }
 
+    // Дуг: само евиденција (не утиче на салдо). `paid` је збир отплата; историја је у `repayments`.
+    function validDebt(d) {
+      return d.keys().hasOnly([
+          'direction', 'counterparty', 'amount', 'description', 'paid', 'repayments',
+          'active', 'authorId', 'createdAt'
+        ])
+        && d.keys().hasAll([
+          'direction', 'counterparty', 'amount', 'paid', 'repayments',
+          'active', 'authorId', 'createdAt'
+        ])
+        && d.direction in ["Потраживање", "Обавеза"]
+        && d.counterparty is string
+        && d.counterparty.size() > 0
+        && validAmount(d.amount, false)
+        && (!('description' in d) || d.description is string)
+        && d.paid is number
+        && d.paid >= 0
+        && d.paid <= d.amount.value
+        && d.repayments is list
+        && d.active is bool
+        && d.authorId is string
+        && d.createdAt is timestamp;
+    }
+
     function isSeededSystemCategory(categoryId, d) {
       return categoryId in ['system-unknown-income', 'system-unknown-expense']
         && d.name == "Непознато"
@@ -123,6 +147,33 @@ service cloud.firestore {
       // Фонд са алоцираним новцем се не брише; провера референцирања записа остаје на application слоју
       // (правила не могу да упитују колекцију `transactions`).
       allow delete: if isAdmin() && resource.data.reserved == 0;
+    }
+
+    match /debts/{debtId} {
+      allow read: if isAllowed();
+      allow create: if isAdmin()
+        && validDebt(request.resource.data)
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.paid == 0
+        && request.resource.data.repayments.size() == 0
+        && request.resource.data.active == true;
+      // direction, authorId и createdAt су immutable. `paid` само расте, и то уз тачно једну нову
+      // ставку у `repayments`; отплата је могућа само на активном дугу; валута се не мења после отплате.
+      allow update: if isAdmin()
+        && validDebt(request.resource.data)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['direction', 'authorId', 'createdAt'])
+        && (
+          (request.resource.data.paid == resource.data.paid
+            && request.resource.data.repayments.size() == resource.data.repayments.size())
+          || (resource.data.active == true
+            && request.resource.data.paid > resource.data.paid
+            && request.resource.data.repayments.size() == resource.data.repayments.size() + 1)
+        )
+        && (resource.data.paid == 0
+            || request.resource.data.amount.currency == resource.data.amount.currency);
+      // Меко брисање (ADR-0004): дугови се поништавају (`active: false`), никад не бришу.
+      allow delete: if false;
     }
 
     match /transactions/{recordId} {

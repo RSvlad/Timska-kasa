@@ -65,6 +65,7 @@ The system tracks the **Team Fund** — a single financial pool of a team or org
 - 🏷️ Record categorization with editing and soft deletion (history is never lost)
 - 📊 Dashboard with the aggregated fund balance, filterable by period, category, type, and currency
 - 🎯 **Funds** — named allocations of money from the fund for a specific purpose (e.g. "Equipment fund"), without double-counting the balance
+- ⇄ **Debts** — tracking of receivables (owed to the fund) and payables (owed by the fund) with partial repayments; tracking only, does not change the fund balance
 - 👥 Two access roles: **Admin** (full control) and **Viewer** (read-only)
 - 🌐 **Two languages** — Serbian (Cyrillic) and English, switchable in the app at any time
 - 📱 **PWA** — installable on a phone or computer and runnable as a standalone app

@@ -4,15 +4,18 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { subscribe as subscribeRecords } from "@finance/infrastructure/FinanceRecordRepository";
 import { subscribeFunds } from "@finance/infrastructure/FundRepository";
+import { subscribeDebts } from "@finance/infrastructure/DebtRepository";
 import { subscribe as subscribeCategories } from "@finance/infrastructure/CategoryRepository";
 import type { FinanceRecord } from "@finance/domain/FinanceRecord";
 import type { Fund } from "@finance/domain/Fund";
+import type { Debt } from "@finance/domain/Debt";
 import type { Category } from "@finance/domain/Category";
 import { useSubscription, type Subscribed } from "./useSubscription";
 
 interface FinanceData {
   records: Subscribed<FinanceRecord>;
   funds: Subscribed<Fund>;
+  debts: Subscribed<Debt>;
   categories: Subscribed<Category>;
 }
 
@@ -21,10 +24,11 @@ const FinanceDataContext = createContext<FinanceData | null>(null);
 export function FinanceDataProvider({ children }: { children: ReactNode }) {
   const records = useSubscription(subscribeRecords);
   const funds = useSubscription(subscribeFunds);
+  const debts = useSubscription(subscribeDebts);
   const categories = useSubscription(subscribeCategories);
 
   return (
-    <FinanceDataContext.Provider value={{ records, funds, categories }}>
+    <FinanceDataContext.Provider value={{ records, funds, debts, categories }}>
       {children}
     </FinanceDataContext.Provider>
   );

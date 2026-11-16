@@ -1319,6 +1319,36 @@ tbody tr:hover td {
   flex-direction: column;
 }
 
+/* ── Debts (користе .fund-card* изглед) ───────────────────────────────────── */
+
+.debt-card--settled {
+  opacity: 0.7;
+}
+.debts-summary-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.debt-history {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.debt-history summary {
+  cursor: pointer;
+}
+.debt-history ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.debt-history li {
+  display: flex;
+  justify-content: space-between;
+}
+
 /* wallet reserved row */
 .wallet-reserved-row {
   display: flex;

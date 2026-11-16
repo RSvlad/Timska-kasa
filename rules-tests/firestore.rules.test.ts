@@ -39,6 +39,24 @@ const fund = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+const debt = (over: Record<string, unknown> = {}) => ({
+  direction: "Потраживање",
+  counterparty: "Марко",
+  amount: { value: 1000, currency: "RSD" },
+  paid: 0,
+  repayments: [],
+  active: true,
+  authorId: ADMIN.uid,
+  createdAt: Timestamp.now(),
+  ...over,
+});
+
+const repayment = (value: number) => ({
+  value,
+  dateTime: Timestamp.now(),
+  authorId: ADMIN.uid,
+});
+
 const category = (over: Record<string, unknown> = {}) => ({
   name: "Храна",
   type: "Расход",
@@ -178,6 +196,87 @@ describe("funds", () => {
     const db = asUser(env, ADMIN).firestore();
     await assertSucceeds(deleteDoc(doc(db, "funds", "empty")));
     await assertFails(deleteDoc(doc(db, "funds", "used")));
+  });
+});
+
+describe("debts", () => {
+  it("члан чита, не пише", async () => {
+    await seed("debts", "d1", debt());
+    const db = asUser(env, MEMBER).firestore();
+    await assertSucceeds(getDoc(doc(db, "debts", "d1")));
+    await assertFails(setDoc(doc(db, "debts", "d2"), debt()));
+    await assertFails(updateDoc(doc(db, "debts", "d1"), { counterparty: "Неко" }));
+  });
+
+  it("Admin креира само празан, активан дуг са својим authorId", async () => {
+    const db = asUser(env, ADMIN).firestore();
+    await assertSucceeds(setDoc(doc(db, "debts", "d1"), debt()));
+    await assertSucceeds(setDoc(doc(db, "debts", "d2"), debt({ direction: "Обавеза" })));
+    await assertFails(setDoc(doc(db, "debts", "d3"), debt({ paid: 10 })));
+    await assertFails(setDoc(doc(db, "debts", "d4"), debt({ repayments: [repayment(10)] })));
+    await assertFails(setDoc(doc(db, "debts", "d5"), debt({ active: false })));
+    await assertFails(setDoc(doc(db, "debts", "d6"), debt({ authorId: "other-uid" })));
+    await assertFails(setDoc(doc(db, "debts", "d7"), debt({ direction: "Позајмица" })));
+    await assertFails(setDoc(doc(db, "debts", "d8"), debt({ counterparty: "" })));
+    await assertFails(
+      setDoc(doc(db, "debts", "d9"), debt({ amount: { value: 0, currency: "RSD" } })),
+    );
+  });
+
+  it("отплата повећава paid уз тачно једну нову ставку историје", async () => {
+    await seed("debts", "d1", debt());
+    const ref = doc(asUser(env, ADMIN).firestore(), "debts", "d1");
+    await assertSucceeds(updateDoc(ref, { paid: 400, repayments: [repayment(400)] }));
+    await assertFails(updateDoc(ref, { paid: 500 }));
+    await assertFails(
+      updateDoc(ref, { paid: 500, repayments: [repayment(400), repayment(50), repayment(50)] }),
+    );
+  });
+
+  it("paid не може пасти ни прећи износ дуга", async () => {
+    await seed("debts", "d1", debt({ paid: 400, repayments: [repayment(400)] }));
+    const ref = doc(asUser(env, ADMIN).firestore(), "debts", "d1");
+    await assertFails(updateDoc(ref, { paid: 300 }));
+    await assertFails(updateDoc(ref, { paid: 1001, repayments: [repayment(400), repayment(601)] }));
+    await assertFails(updateDoc(ref, { amount: { value: 300, currency: "RSD" } }));
+    await assertSucceeds(
+      updateDoc(ref, { paid: 1000, repayments: [repayment(400), repayment(600)] }),
+    );
+  });
+
+  it("direction, authorId и createdAt су immutable", async () => {
+    await seed("debts", "d1", debt());
+    const ref = doc(asUser(env, ADMIN).firestore(), "debts", "d1");
+    await assertFails(updateDoc(ref, { direction: "Обавеза" }));
+    await assertFails(updateDoc(ref, { authorId: "other-uid" }));
+    await assertFails(updateDoc(ref, { createdAt: Timestamp.fromMillis(1) }));
+  });
+
+  it("валута се мења само пре прве отплате", async () => {
+    await seed("debts", "fresh", debt());
+    await seed("debts", "paid", debt({ paid: 10, repayments: [repayment(10)] }));
+    const db = asUser(env, ADMIN).firestore();
+    await assertSucceeds(
+      updateDoc(doc(db, "debts", "fresh"), { amount: { value: 1000, currency: "EUR" } }),
+    );
+    await assertFails(
+      updateDoc(doc(db, "debts", "paid"), { amount: { value: 1000, currency: "EUR" } }),
+    );
+  });
+
+  it("поништен дуг се не може отплаћивати, али се може поништити", async () => {
+    await seed("debts", "inactive", debt({ active: false }));
+    await seed("debts", "active", debt());
+    const db = asUser(env, ADMIN).firestore();
+    await assertFails(
+      updateDoc(doc(db, "debts", "inactive"), { paid: 10, repayments: [repayment(10)] }),
+    );
+    await assertSucceeds(updateDoc(doc(db, "debts", "active"), { active: false }));
+  });
+
+  it("не може се обрисати", async () => {
+    await seed("debts", "d1", debt());
+    await assertFails(deleteDoc(doc(asUser(env, ADMIN).firestore(), "debts", "d1")));
   });
 });
 

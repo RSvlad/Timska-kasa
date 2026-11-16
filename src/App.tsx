@@ -4,6 +4,7 @@ import { CategoryList } from "@finance/ui/CategoryList";
 import { RecordList } from "@finance/ui/RecordList";
 import { Dashboard } from "@finance/ui/Dashboard";
 import { FundsPage } from "@finance/ui/FundsPage";
+import { DebtsPage } from "@finance/ui/DebtsPage";
 import { FinanceDataProvider } from "@finance/application/FinanceDataProvider";
 import { useT } from "@shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@shared/ui/LanguageSwitcher";
@@ -11,12 +12,13 @@ import { InstallAppButton } from "@shared/ui/InstallAppButton";
 import { DemoLogin } from "@shared/ui/DemoLogin";
 import { appMessages } from "./App.messages";
 
-type View = "dashboard" | "records" | "funds" | "categories";
+type View = "dashboard" | "records" | "funds" | "debts" | "categories";
 
 const NAV_ITEMS = [
   { id: "dashboard", labelKey: "nav.dashboard", icon: "◈" },
   { id: "records", labelKey: "nav.records", icon: "≡" },
   { id: "funds", labelKey: "nav.funds", icon: "🗂" },
+  { id: "debts", labelKey: "nav.debts", icon: "⇄" },
   { id: "categories", labelKey: "nav.categories", icon: "⊞" },
 ] as const satisfies readonly { id: View; labelKey: string; icon: string }[];
 
@@ -95,6 +97,7 @@ export default function App() {
           {view === "dashboard" && <Dashboard />}
           {view === "records" && <RecordList role={user.role} currentUserId={user.id} />}
           {view === "funds" && <FundsPage role={user.role} />}
+          {view === "debts" && <DebtsPage role={user.role} currentUserId={user.id} />}
           {view === "categories" && <CategoryList role={user.role} />}
         </main>
 
