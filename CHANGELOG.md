@@ -2,6 +2,13 @@
 
 Формат прати [Keep a Changelog](https://keepachangelog.com/sr/1.1.0/), а верзионисање [Semantic Versioning](https://semver.org/lang/sr/).
 
+## [0.0.11](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.10...timska-kasa-v0.0.11) (2026-11-17)
+
+
+### Bug Fixes
+
+* **deps:** override minimatch to ^11.0.1 for GHSA-g3hv-75wg-m249 ([4adc415](https://github.com/RSvlad/Timska-kasa/commit/4adc415c61d8ced95dd4f2c3d72e29d425f9b69a))
+
 ## [0.0.10](https://github.com/RSvlad/Timska-kasa/compare/timska-kasa-v0.0.9...timska-kasa-v0.0.10) (2026-11-16)
 
 
